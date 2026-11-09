@@ -2,9 +2,9 @@ name: Web CI
 
 on:
   push:
-    branches: [main, feat/scrum-15-web-auth0]
+    branches: [dev, staging, main, feat/scrum-15-web-auth0]
   pull_request:
-    branches: [main]
+    branches: [dev, staging, main]
 
 jobs:
   build:

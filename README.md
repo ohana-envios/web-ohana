@@ -34,3 +34,7 @@ Para MFA, habilitar una política en el tenant Auth0 y probarla con cuentas de p
 - Confirmar con Fernando qué roles verán cada módulo y la política de MFA.
 - Definir las rutas y respuestas de los casos de uso antes de conectar datos operativos.
 - Verificar el despliegue Vercel y registrar sus URLs en Auth0 al publicar el entorno.
+
+## Ramas y ambientes
+
+La promoción acordada es `feature/* → dev → staging → main`, siempre mediante PR y revisión. `main` representa producción, pero la rama no demuestra por sí sola qué commit está publicado. En Vercel, configurar `main` como Production Branch solo después de confirmar que este repositorio corresponde al sitio de Ohana. `dev` y `staging` pueden usar Preview Deployments con variables `VITE_` específicas por rama; cada una debe apuntar a su API y aplicación Auth0 correspondientes. No usar la audiencia ni la API de producción en previews. La guía general está en `api-ohana/docs/branching-and-environments.md`.
