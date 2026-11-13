@@ -1,20 +1,22 @@
 export type AppConfig = {
-  domain: string;
+  issuerUrl: string;
   clientId: string;
-  audience: string;
+  projectId: string;
   apiBaseUrl: string;
 };
 
 export function readConfig(env: ImportMetaEnv): AppConfig | null {
-  const domain = env.VITE_AUTH0_DOMAIN?.trim();
-  const clientId = env.VITE_AUTH0_CLIENT_ID?.trim();
-  const audience = env.VITE_AUTH0_AUDIENCE?.trim();
+  const issuerUrl = env.VITE_ZITADEL_ISSUER_URL?.trim();
+  const clientId = env.VITE_ZITADEL_CLIENT_ID?.trim();
+  const projectId = env.VITE_ZITADEL_PROJECT_ID?.trim();
   const apiBaseUrl = env.VITE_API_BASE_URL?.trim();
-  if (!domain || !clientId || !audience || !apiBaseUrl) return null;
+  if (!issuerUrl || !clientId || !/^\d+$/.test(projectId ?? '') || !apiBaseUrl) return null;
   try {
     const api = new URL(apiBaseUrl);
+    const issuer = new URL(issuerUrl);
     if (!['http:', 'https:'].includes(api.protocol)) return null;
-    return { domain, clientId, audience, apiBaseUrl: api.toString().replace(/\/$/, '') };
+    if (issuer.protocol !== 'https:' || issuer.pathname !== '/' || issuer.search || issuer.hash) return null;
+    return { issuerUrl: issuer.origin, clientId, projectId: projectId!, apiBaseUrl: api.toString().replace(/\/$/, '') };
   } catch {
     return null;
   }

@@ -1,4 +1,4 @@
-import { useAuth0 } from '@auth0/auth0-react';
+import { useAuth } from 'react-oidc-context';
 import { useEffect, useState } from 'react';
 import type { AppConfig } from './config';
 
@@ -8,7 +8,7 @@ type Health = 'checking' | 'up' | 'down';
 const sections: Section[] = ['Resumen', 'Envíos', 'Clientes', 'Rutas'];
 
 function Dashboard({ config }: { config: AppConfig }) {
-  const { user, logout } = useAuth0();
+  const { user, signoutRedirect } = useAuth();
   const [section, setSection] = useState<Section>('Resumen');
   const [health, setHealth] = useState<Health>('checking');
 
@@ -35,7 +35,7 @@ function Dashboard({ config }: { config: AppConfig }) {
         <div className="sidebar-footer"><span className={`status-dot ${health}`} /> API {health === 'up' ? 'conectada' : health === 'down' ? 'sin conexión' : 'comprobando'}</div>
       </aside>
       <main className="content">
-        <header className="topbar"><div><span className="eyebrow">PANEL DE GESTIÓN</span><h1>{section}</h1></div><div className="account"><span>{user?.name ?? user?.email ?? 'Usuario'}</span><button type="button" onClick={() => logout({ logoutParams: { returnTo: window.location.origin } })}>Salir</button></div></header>
+        <header className="topbar"><div><span className="eyebrow">PANEL DE GESTIÓN</span><h1>{section}</h1></div><div className="account"><span>{user?.profile.name ?? user?.profile.email ?? 'Usuario'}</span><button type="button" onClick={() => void signoutRedirect()}>Salir</button></div></header>
         {section === 'Resumen' ? <Overview /> : <SectionPlaceholder section={section} />}
       </main>
     </div>
@@ -62,9 +62,9 @@ function SectionPlaceholder({ section }: { section: Exclude<Section, 'Resumen'> 
 }
 
 export default function App({ config }: { config: AppConfig }) {
-  const { isLoading, isAuthenticated, error, loginWithRedirect } = useAuth0();
+  const { isLoading, isAuthenticated, error, signinRedirect } = useAuth();
   if (isLoading) return <main className="setup"><p>Cargando sesión…</p></main>;
-  if (error) return <main className="setup"><div className="setup-card"><h1>No se pudo iniciar sesión</h1><p>{error.message}</p><button className="primary-button" onClick={() => loginWithRedirect()}>Reintentar</button></div></main>;
-  if (!isAuthenticated) return <main className="login-layout"><div className="login-hero"><span className="brand-mark">O</span><p className="eyebrow">OHANA ENVÍOS</p><h1>Tu operación,<br />siempre en movimiento.</h1><p>Gestión de cadetería y envíos en un solo lugar.</p></div><div className="login-side"><div className="login-card"><span className="eyebrow">BIENVENIDO</span><h2>Ingresá a Ohana</h2><p>Accedé de forma segura con tu cuenta de la organización.</p><button className="primary-button" onClick={() => loginWithRedirect()}>Iniciar sesión <span>→</span></button><small>Si la organización exige segundo factor, Auth0 lo solicitará durante el ingreso.</small></div></div></main>;
+  if (error) return <main className="setup"><div className="setup-card"><h1>No se pudo iniciar sesión</h1><p>{error.message}</p><button className="primary-button" onClick={() => void signinRedirect()}>Reintentar</button></div></main>;
+  if (!isAuthenticated) return <main className="login-layout"><div className="login-hero"><span className="brand-mark">O</span><p className="eyebrow">OHANA ENVÍOS</p><h1>Tu operación,<br />siempre en movimiento.</h1><p>Gestión de cadetería y envíos en un solo lugar.</p></div><div className="login-side"><div className="login-card"><span className="eyebrow">BIENVENIDO</span><h2>Ingresá a Ohana</h2><p>Accedé de forma segura con tu cuenta de la organización.</p><button className="primary-button" onClick={() => void signinRedirect()}>Iniciar sesión <span>→</span></button><small>El segundo factor se solicita durante el ingreso según la política de ZITADEL.</small></div></div></main>;
   return <Dashboard config={config} />;
 }

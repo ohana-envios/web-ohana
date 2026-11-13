@@ -15,7 +15,7 @@ Duración propuesta: 2 horas. Objetivo: que los dos integrantes puedan ejecutar 
 | Repositorio | Verificación automática inicial | Próximo incremento útil |
 | --- | --- | --- |
 | `api-ohana` | PostgreSQL 17, migraciones, restricciones, build, unit tests y HTTP health. | Pruebas de contratos y casos de uso al agregar endpoints. |
-| `web-ohana` | Instalación reproducible, TypeScript y build de Vite. | Pruebas de componentes y flujo de Auth0 con mocks, luego pruebas de navegación. |
+| `web-ohana` | Instalación reproducible, TypeScript y build de Vite. | Pruebas de componentes y flujo de ZITADEL con mocks, luego pruebas de navegación. |
 | `app-mobile-ohana` | Instalación reproducible, TypeScript y exportación de bundles iOS/Android. | Pruebas de componentes y un flujo E2E en simuladores cuando haya autenticación y casos de uso. |
 
 La exportación de Expo comprueba el bundle JavaScript para cada plataforma; la ejecución en simulador/dispositivo y la compilación nativa son controles distintos. La primera entrega móvil debe registrarlos por separado. Antes de exigir cobertura porcentual, elegir casos críticos (alta de envío, cambios de estado, custodia, permisos) y agregar pruebas que detecten errores reales.
@@ -24,6 +24,6 @@ La exportación de Expo comprueba el bundle JavaScript para cada plataforma; la 
 
 - **Mínimo en cada PR:** `npm ci`, TypeScript/build y pruebas pertinentes. Es rápido y ya está preparado en los tres repositorios.
 - **Protección de `main`:** requerir CI verde y una revisión de otro integrante. Activarla en GitHub cuando el equipo confirme los permisos y nombres de checks.
-- **Siguiente nivel:** entorno de staging con Auth0 de prueba y PostgreSQL aislado; ejecutar un flujo web/API y otro móvil/API antes de publicar. Requiere URLs y cuentas de prueba, por lo que aún no se configura.
+- **Siguiente nivel:** entorno de staging con ZITADEL de prueba y PostgreSQL aislado; ejecutar un flujo web/API y otro móvil/API antes de publicar. Requiere URLs y cuentas de prueba, por lo que aún no se configura.
 
-No guardar secretos de Auth0, base de datos o EAS en workflows. Las variables públicas de cliente pueden documentarse en ejemplos; credenciales reales deben estar en GitHub Secrets o en el gestor del entorno correspondiente.
+No guardar secretos de ZITADEL, base de datos o EAS en workflows. Las variables públicas de cliente pueden documentarse en ejemplos; credenciales reales deben estar en GitHub Secrets o en el gestor del entorno correspondiente.

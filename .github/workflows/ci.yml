@@ -2,7 +2,7 @@ name: Web CI
 
 on:
   push:
-    branches: [dev, staging, main, feat/scrum-15-web-auth0]
+    branches: [dev, staging, main, feat/scrum-15-web-auth0, feat/scrum-15-web-oidc-zitadel]
   pull_request:
     branches: [dev, staging, main]
 
