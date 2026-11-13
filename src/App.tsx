@@ -1,9 +1,11 @@
 import { useAuth } from 'react-oidc-context';
 import { useEffect, useState } from 'react';
 import type { AppConfig } from './config';
+import { createApiClient } from './api';
 
 type Section = 'Resumen' | 'Envíos' | 'Clientes' | 'Rutas';
 type Health = 'checking' | 'up' | 'down';
+type SessionCheck = 'checking' | 'verified' | 'failed';
 
 const sections: Section[] = ['Resumen', 'Envíos', 'Clientes', 'Rutas'];
 
@@ -11,6 +13,8 @@ function Dashboard({ config }: { config: AppConfig }) {
   const { user, signoutRedirect } = useAuth();
   const [section, setSection] = useState<Section>('Resumen');
   const [health, setHealth] = useState<Health>('checking');
+  const [sessionCheck, setSessionCheck] = useState<SessionCheck>('checking');
+  const accessToken = user?.access_token;
 
   useEffect(() => {
     const controller = new AbortController();
@@ -22,6 +26,22 @@ function Dashboard({ config }: { config: AppConfig }) {
     return () => controller.abort();
   }, [config.apiBaseUrl]);
 
+  useEffect(() => {
+    if (!accessToken) {
+      setSessionCheck('failed');
+      return;
+    }
+    const controller = new AbortController();
+    setSessionCheck('checking');
+    const request = createApiClient(config.apiBaseUrl, async () => accessToken);
+    request<{ sub: string }>('/api/auth/me', { signal: controller.signal })
+      .then((identity) => setSessionCheck(identity.sub === user?.profile.sub ? 'verified' : 'failed'))
+      .catch((error: unknown) => {
+        if (error instanceof Error && error.name !== 'AbortError') setSessionCheck('failed');
+      });
+    return () => controller.abort();
+  }, [accessToken, config.apiBaseUrl, user?.profile.sub]);
+
   return (
     <div className="app-shell">
       <aside className="sidebar">
@@ -32,7 +52,10 @@ function Dashboard({ config }: { config: AppConfig }) {
             <button key={item} type="button" className={`nav-item ${section === item ? 'active' : ''}`} onClick={() => setSection(item)}>{item}</button>
           ))}
         </nav>
-        <div className="sidebar-footer"><span className={`status-dot ${health}`} /> API {health === 'up' ? 'conectada' : health === 'down' ? 'sin conexión' : 'comprobando'}</div>
+        <div className="sidebar-footer">
+          <div><span className={`status-dot ${health}`} /> API {health === 'up' ? 'conectada' : health === 'down' ? 'sin conexión' : 'comprobando'}</div>
+          <div><span className={`status-dot ${sessionCheck === 'verified' ? 'up' : sessionCheck === 'failed' ? 'down' : 'checking'}`} /> Sesión {sessionCheck === 'verified' ? 'verificada por la API' : sessionCheck === 'failed' ? 'sin verificar en la API' : 'comprobando'}</div>
+        </div>
       </aside>
       <main className="content">
         <header className="topbar"><div><span className="eyebrow">PANEL DE GESTIÓN</span><h1>{section}</h1></div><div className="account"><span>{user?.profile.name ?? user?.profile.email ?? 'Usuario'}</span><button type="button" onClick={() => void signoutRedirect()}>Salir</button></div></header>

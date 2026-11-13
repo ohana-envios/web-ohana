@@ -25,7 +25,7 @@ Abra `http://localhost:5173`. Complete `.env` con el emisor, Client ID y Project
 
 ## Alcance
 
-El cliente OIDC usa Code + PKCE. Su almacenamiento predeterminado es `sessionStorage` del navegador; configure una política CSP y trate cualquier XSS como riesgo de robo de tokens. `src/api.ts` prepara llamadas autenticadas con un access token obtenido por el SDK. La API introspecta el token y comprueba su estado, emisor, proyecto, cliente y expiración; una sesión visible en el navegador no sustituye ese control. El panel solo muestra el estado de `/api/health` y marcadores vacíos; no inventa métricas ni envíos.
+El cliente OIDC usa Code + PKCE. Su almacenamiento predeterminado es `sessionStorage` del navegador; configure una política CSP y trate cualquier XSS como riesgo de robo de tokens. `src/api.ts` prepara llamadas autenticadas con un access token obtenido por el SDK. La API introspecta el token y comprueba su estado, emisor, proyecto, cliente y expiración; una sesión visible en el navegador no sustituye ese control. El panel muestra el estado de `/api/health` y verifica la sesión con una llamada autenticada a `/api/auth/me`. El indicador «Sesión verificada por la API» solo aparece si el sujeto devuelto coincide con el usuario OIDC. Los datos operativos siguen siendo marcadores vacíos; no inventa métricas ni envíos.
 
 Para MFA, habilitar TOTP y Force MFA en la instancia ZITADEL y probarlo con cuentas de cada ambiente; este repositorio no habilita la política por sí solo. Las pantallas de Envíos, Clientes y Rutas son puntos de entrada para los casos de uso posteriores.
 
