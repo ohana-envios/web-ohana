@@ -2,6 +2,7 @@ import { useAuth } from 'react-oidc-context';
 import { useEffect, useState } from 'react';
 import type { AppConfig } from './config';
 import { createApiClient } from './api';
+import { CustomersPage } from './customers/CustomersPage';
 
 type Section = 'Resumen' | 'Envíos' | 'Clientes' | 'Rutas';
 type Health = 'checking' | 'up' | 'down';
@@ -59,7 +60,7 @@ function Dashboard({ config }: { config: AppConfig }) {
       </aside>
       <main className="content">
         <header className="topbar"><div><span className="eyebrow">PANEL DE GESTIÓN</span><h1>{section}</h1></div><div className="account"><span>{user?.profile.name ?? user?.profile.email ?? 'Usuario'}</span><button type="button" onClick={() => void signoutRedirect()}>Salir</button></div></header>
-        {section === 'Resumen' ? <Overview /> : <SectionPlaceholder section={section} />}
+        {section === 'Resumen' ? <Overview /> : section === 'Clientes' ? <CustomersPage /> : <SectionPlaceholder section={section} />}
       </main>
     </div>
   );
@@ -75,10 +76,9 @@ function Overview() {
   </>;
 }
 
-function SectionPlaceholder({ section }: { section: Exclude<Section, 'Resumen'> }) {
-  const descriptions: Record<Exclude<Section, 'Resumen'>, string> = {
+function SectionPlaceholder({ section }: { section: Exclude<Section, 'Resumen' | 'Clientes'> }) {
+  const descriptions: Record<Exclude<Section, 'Resumen' | 'Clientes'>, string> = {
     Envíos: 'Listado, alta y seguimiento de solicitudes de envío.',
-    Clientes: 'Consulta de clientes y sus direcciones habituales.',
     Rutas: 'Planificación y asignación de recorridos.',
   };
   return <section className="panel placeholder"><span className="eyebrow">PRÓXIMA IMPLEMENTACIÓN</span><h2>{section}</h2><p>{descriptions[section]}</p><p>La estructura de navegación está lista para incorporar esta funcionalidad cuando exista su API.</p></section>;
