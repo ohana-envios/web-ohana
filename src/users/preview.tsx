@@ -16,7 +16,7 @@ if (import.meta.env.DEV) {
       <strong>Vista previa administrativa · Usuarios ficticios</strong>
       <p>Podés consultar y modificar el rol y acceso de cuentas ficticias ya existentes. Los cambios duran hasta recargar; esta vista no se conecta a servicios reales.</p>
     </aside>
-    <UsersPage source={previewUsersSource} pageSize={3} />
+    <UsersPage source={previewUsersSource} pageSize={3} preview />
     <a className="users-preview-link" href="/customers-preview.html">Ir a la vista previa de clientes →</a>
   <PreviewNavigation active="users" />
     </main></React.StrictMode>);

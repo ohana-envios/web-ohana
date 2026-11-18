@@ -7,7 +7,11 @@ export function createApiClient(baseUrl: string, getToken: () => Promise<string>
       ...init,
       headers,
     });
-    if (!response.ok) throw Object.assign(new Error(`La API respondió ${response.status}`), { status: response.status });
+    if (!response.ok) {
+      let code: string | undefined;
+      try { const body: unknown = await response.json(); if (body && typeof body === 'object' && 'code' in body && body.code === 'CUSTOMER_EMAIL_DUPLICATE') code = body.code; } catch { /* Keep the generic error when no structured body is available. */ }
+      throw Object.assign(new Error(`La API respondió ${response.status}`), { status: response.status, ...(code ? { code } : {}) });
+    }
     return response.json() as Promise<T>;
   };
 }

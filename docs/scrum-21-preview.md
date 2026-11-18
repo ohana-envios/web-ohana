@@ -1,5 +1,20 @@
 # SCRUM-21 — Vista previa de clientes
 
+## Actualización: correo duplicado
+
+Las altas y ediciones reales rechazan asignar un correo ya utilizado por otro cliente o reservado por otra solicitud, ignorando mayúsculas y espacios externos. El formulario conserva los datos e informa el problema en el campo, separado de los conflictos por cambios simultáneos. Las fichas históricas duplicadas se conservan; no se modifican automáticamente.
+
+
+## Actualización: autogestión
+
+Los clientes con cuenta habilitada y asociación aprobada pueden ingresar a «Mis datos y direcciones» para consultar y editar su ficha y gestionar sus direcciones. Se conserva la regla de al menos una dirección activa. La API decide el cliente a partir de la sesión; la interfaz no proporciona un identificador de cliente para la autorización. La integración real con ZITADEL y la revisión visual permanecen pendientes.
+
+
+## Actualización: estado real y auditoría
+
+La web conectada permite desactivar y reactivar fichas de cliente, conservando las direcciones y la cuenta de acceso. Clientes pendientes deben pasar por la aprobación inicial; no se habilitan desde este control. Las escrituras administrativas de datos y direcciones registran auditoría persistente en la API. La vista previa continúa usando datos en memoria. Falta validación visual y con ZITADEL real.
+
+
 Actualización: la API registra los endpoints de lectura de clientes para administradores habilitados, según la decisión del usuario. Los paneles reales de web y móvil se conectaron en código a esa lectura, pero falta validarlos con identidad y base de datos reales. Esta vista previa sigue usando datos ficticios. Las referencias posteriores a un módulo sin controladores o a la conexión pendiente describen etapas anteriores.
 
 La edición de nombre y contacto también está conectada en los paneles reales a la API; falta probarla con servicios reales. Los formularios de esta vista previa continúan con guardado temporal.

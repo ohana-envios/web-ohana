@@ -58,7 +58,7 @@ function summary(customer: CustomerDetail): CustomerSummary {
   };
 }
 
-export function createPreviewCustomersSource(): Required<CustomersSource> {
+export function createPreviewCustomersSource(): Required<Omit<CustomersSource, 'inviteCustomer'>> {
   const records = customers.map(copyCustomer);
   let nextAddressId = 0;
   return {

@@ -35,3 +35,13 @@ test('authenticated transport sends the token and never replaces denied data wit
     await once(server, 'close');
   }
 });
+
+
+test('duplicate email errors carry only the known code', async () => {
+  const server = createServer((request, response) => response.writeHead(409, { 'Content-Type': 'application/json' }).end(JSON.stringify({ code: 'CUSTOMER_EMAIL_DUPLICATE', internal: 'must not leak' })));
+  server.listen(0, '127.0.0.1'); await once(server, 'listening');
+  try {
+    const request = createApiClient(`http://127.0.0.1:${server.address().port}`, async () => 'test-token');
+    await assert.rejects(request('/api/test', { signal: new AbortController().signal }), error => error.status === 409 && error.code === 'CUSTOMER_EMAIL_DUPLICATE' && !('internal' in error));
+  } finally { server.close(); await once(server, 'close'); }
+});

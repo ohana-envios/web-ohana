@@ -11,7 +11,7 @@ const users: UserSummary[] = [
   { id: 'demo-user-courier', displayName: 'Repartidora de ejemplo', email: 'cadete@example.invalid', role: 'COURIER', enabled: true },
 ];
 
-export function createPreviewUsersSource(): Required<UsersSource> {
+export function createPreviewUsersSource(): UsersSource & Required<Pick<UsersSource, 'updateAccess'>> {
  const records = users.map((user) => ({ ...user }));
  return {
   async list(query, signal) {

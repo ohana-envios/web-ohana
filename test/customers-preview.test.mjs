@@ -97,3 +97,11 @@ test('failed or cancelled preview edits leave the customer unchanged', async () 
   await assert.rejects(editable.update('missing', draft, signal()));
   assert.deepEqual(await editable.get('demo-atelier', signal()), before);
 });
+
+
+test('duplicate email conflicts are distinguishable from stale edits', async () => {
+  const { isDuplicateCustomerEmail } = await import('../src/customers/customer-edit.ts');
+  assert.equal(isDuplicateCustomerEmail({ status: 409, code: 'CUSTOMER_EMAIL_DUPLICATE' }), true);
+  assert.equal(isDuplicateCustomerEmail({ status: 409 }), false);
+  assert.equal(isDuplicateCustomerEmail(null), false);
+});

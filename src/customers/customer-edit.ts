@@ -3,6 +3,10 @@ import type { CustomerEditData, CustomerEditDraft } from './types';
 export type CustomerEditErrors = Partial<Record<keyof CustomerEditDraft, string>>;
 type Validation = { valid: true; data: CustomerEditData } | { valid: false; errors: CustomerEditErrors };
 
+export function isDuplicateCustomerEmail(error: unknown): boolean {
+  return Boolean(error && typeof error === 'object' && 'code' in error && error.code === 'CUSTOMER_EMAIL_DUPLICATE');
+}
+
 export function isCustomerConflict(error: unknown): boolean {
   return Boolean(error && typeof error === 'object' && 'status' in error && error.status === 409);
 }

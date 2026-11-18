@@ -13,13 +13,16 @@ export type UserListQuery = {
   pageSize: number;
 };
 export type UserList = { items: UserSummary[]; page: number; pageSize: number; total: number; totalPages: number };
+export type InternalUserDraft = { displayName: string; email: string; role: Exclude<UserRole, 'CUSTOMER'> };
 export type UserAccessDraft = { role: UserRole; enabled: boolean };
 export type UserAccessChange = {
   user: UserSummary;
-  // Temporary evidence for development only, not persisted business audit.
-  previewAudit: { actorId: string; occurredAt: string; previous: UserAccessDraft; next: UserAccessDraft } | null;
+  audit?: { actorId: string; occurredAt: string; previous: UserAccessDraft; next: UserAccessDraft } | null;
+  previewAudit?: { actorId: string; occurredAt: string; previous: UserAccessDraft; next: UserAccessDraft } | null;
 };
 export type UsersSource = {
   list(query: UserListQuery, signal: AbortSignal): Promise<UserList>;
-  updateAccess?(id: string, draft: UserAccessDraft, signal: AbortSignal): Promise<UserAccessChange>;
+  issueInvitation?(id: string, signal: AbortSignal): Promise<{ code: string; expiresAt: string }>;
+  createInternal?(draft: InternalUserDraft, signal: AbortSignal): Promise<{ user: UserSummary }>;
+  updateAccess?(id: string, draft: UserAccessDraft, signal: AbortSignal, original?: UserSummary): Promise<UserAccessChange>;
 };

@@ -10,10 +10,11 @@ type DetailState = { kind: 'loading' } | { kind: 'error' } | { kind: 'ready'; cu
 type Editor = { kind: 'customer' } | { kind: 'address'; address: CustomerAddress | null }
   | { kind: 'customerStatus'; activate: boolean } | { kind: 'addressStatus'; address: CustomerAddress; activate: boolean } | null;
 
-export function CustomerDetail({ id, source, onBack, onUpdated, preview }: {
+export function CustomerDetail({ id, source, onBack, onUpdated, preview, backLabel = '← Volver a clientes' }: {
   id: string;
   source: CustomersSource;
   preview: boolean;
+  backLabel?: string;
   onBack(): void;
   onUpdated(): void;
 }) {
@@ -21,6 +22,10 @@ export function CustomerDetail({ id, source, onBack, onUpdated, preview }: {
   const [retry, setRetry] = useState(0);
   const [editor, setEditor] = useState<Editor>(null);
   const [saved, setSaved] = useState(false);
+  const [invitationEmail, setInvitationEmail] = useState('');
+  const [invitation, setInvitation] = useState<{ code: string; expiresAt: string } | null>(null);
+  const [invitationBusy, setInvitationBusy] = useState(false);
+  const [invitationError, setInvitationError] = useState('');
   const heading = useRef<HTMLHeadingElement>(null);
 
   useEffect(() => {
@@ -83,7 +88,7 @@ export function CustomerDetail({ id, source, onBack, onUpdated, preview }: {
   }
 
   return <section className="customer-detail" aria-label="Ficha de cliente">
-    <button type="button" className="customer-back" onClick={onBack}>← Volver a clientes</button>
+    <button type="button" className="customer-back" onClick={onBack}>{backLabel}</button>
     {saved && <p className="customer-save-success" role="status">{preview ? 'Cambios guardados temporalmente en esta vista previa. Se restablecen al recargar.' : 'Cambios guardados.'}</p>}
     {state.kind === 'loading' && <p role="status">Cargando ficha del cliente…</p>}
     {state.kind === 'error' && <div className="panel customer-message" role="alert">
@@ -110,6 +115,16 @@ export function CustomerDetail({ id, source, onBack, onUpdated, preview }: {
           {source.reactivateCustomer && !state.customer.enabled && <button type="button" className="customer-button customer-button-primary" onClick={() => openEditor({ kind: 'customerStatus', activate: true })}>Reactivar cliente</button>}
         </div>
       </div>
+      {source.inviteCustomer && state.customer.enabled && <div className="panel">
+        <h3>Invitar al cliente a su cuenta</h3>
+        <p>Indic? el correo que el cliente usa para ingresar. Deber? verificarlo y canjear el c?digo; despu?s un administrador habilita su cuenta.</p>
+        {invitation ? <div role="status"><p>C?digo de un solo uso (vence {new Date(invitation.expiresAt).toLocaleString()}):</p><strong>{invitation.code}</strong><p>Compartilo de forma segura. Al salir de esta ficha no se volver? a mostrar.</p><button type="button" className="customer-button" onClick={() => setInvitation(null)}>Cerrar</button></div> :
+          <form onSubmit={(event) => { event.preventDefault(); if (invitationBusy || !source.inviteCustomer) return; setInvitationBusy(true); setInvitationError(''); source.inviteCustomer(id, invitationEmail.trim(), new AbortController().signal).then(setInvitation).catch(() => setInvitationError('No se pudo generar la invitaci?n. Verific? el correo y el estado de la cuenta.')).finally(() => setInvitationBusy(false)); }}>
+            <label>Correo de acceso <input type="email" required maxLength={254} value={invitationEmail} onChange={(event) => setInvitationEmail(event.target.value)} /></label>
+            {invitationError && <p role="alert">{invitationError}</p>}
+            <button type="submit" className="customer-button" disabled={invitationBusy}>{invitationBusy ? 'Generando?' : 'Generar invitaci?n'}</button>
+          </form>}
+      </div>}
       <CustomerAddresses customer={state.customer} preview={preview}
         onAdd={source.addAddress ? () => openEditor({ kind: 'address', address: null }) : undefined}
         onEdit={source.updateAddress ? (address) => openEditor({ kind: 'address', address }) : undefined}

@@ -2,9 +2,14 @@ import { useAuth } from 'react-oidc-context';
 import { useEffect, useMemo, useState } from 'react';
 import type { AppConfig } from './config';
 import { createApiClient } from './api';
+import { SelfCustomerPage } from './SelfCustomerPage';
 import { CustomersPage } from './customers/CustomersPage';
 import { UsersPage } from './users/UsersPage';
-import { createApiCustomersSource, createApiUsersSource, getOperationalSession } from './api-sources';
+import { createApiCustomersSource, createSelfCustomerSource, createApiUsersSource, getOperationalSession } from './api-sources';
+import { InvitationClaim } from './InvitationClaim';
+import { AdminCustomerRegistration } from './AdminCustomerRegistration';
+import { createRegistrationsSource } from './registrations';
+import { RegistrationForm, PendingRegistrations } from './RegistrationViews';
 import { isCurrentAdministrator, type OperationalSession } from './operational-session';
 
 type Section = 'Resumen' | 'Envíos' | 'Clientes' | 'Rutas' | 'Usuarios';
@@ -16,6 +21,7 @@ const sections: Section[] = ['Resumen', 'Envíos', 'Clientes', 'Rutas', 'Usuario
 function Dashboard({ config }: { config: AppConfig }) {
   const { user, signoutRedirect } = useAuth();
   const [section, setSection] = useState<Section>('Resumen');
+  const [customersRevision, setCustomersRevision] = useState(0);
   const [health, setHealth] = useState<Health>('checking');
   const [sessionCheck, setSessionCheck] = useState<SessionCheck>('checking');
   const [operationalSession, setOperationalSession] = useState<OperationalSession | null>(null);
@@ -24,7 +30,7 @@ function Dashboard({ config }: { config: AppConfig }) {
   const sources = useMemo(() => {
     if (!accessToken) return null;
     const request = createApiClient(config.apiBaseUrl, async () => accessToken);
-    return { customers: createApiCustomersSource(request), users: createApiUsersSource(request) };
+    return { customers: createApiCustomersSource(request), selfCustomer: createSelfCustomerSource(request), users: createApiUsersSource(request), registrations: createRegistrationsSource(request) };
   }, [accessToken, config.apiBaseUrl]);
 
   useEffect(() => {
@@ -65,6 +71,13 @@ function Dashboard({ config }: { config: AppConfig }) {
     return () => controller.abort();
   }, [accessToken, config.apiBaseUrl, user?.profile.sub]);
 
+  if (operationalSession?.user.role === 'CUSTOMER' && operationalSession.token === accessToken && sources) return <SelfCustomerPage source={sources.selfCustomer} name={operationalSession.user.displayName} onExit={() => void signoutRedirect()} />;
+
+  if (operationalSession && operationalSession.user.role !== 'ADMIN' && operationalSession.token === accessToken) return <main className="setup"><div className="setup-card">
+    <h1>Hola, {operationalSession.user.displayName}</h1><p>{operationalSession.user.role === 'CUSTOMER' ? 'Tu cuenta de cliente está habilitada. Las funciones de envíos todavía no están disponibles.' : 'Tu cuenta está habilitada. Las funciones operativas de tu rol todavía no están disponibles.'}</p>
+    <button className="primary-button" type="button" onClick={() => void signoutRedirect()}>Salir</button>
+  </div></main>;
+
   return (
     <div className="app-shell">
       <aside className="sidebar">
@@ -82,8 +95,8 @@ function Dashboard({ config }: { config: AppConfig }) {
       </aside>
       <main className="content">
         <header className="topbar"><div><span className="eyebrow">PANEL DE GESTIÓN</span><h1>{section}</h1></div><div className="account"><span>{user?.profile.name ?? user?.profile.email ?? 'Usuario'}</span><button type="button" onClick={() => void signoutRedirect()}>Salir</button></div></header>
-        {section === 'Resumen' ? <Overview /> : section === 'Clientes' ? <CustomersPage source={admin ? sources?.customers : undefined} /> : section === 'Usuarios' ?
-          admin && sources ? <UsersPage source={sources.users} /> : <section className="panel customer-message"><h2>Consulta no disponible</h2><p>La sesión no tiene acceso administrativo habilitado.</p></section>
+        {section === 'Resumen' ? <>{!operationalSession && sessionCheck === 'verified' && sources && <><InvitationClaim source={sources.registrations} /><RegistrationForm source={sources.registrations} /></>}<Overview /></> : section === 'Clientes' ? <>{admin && sources && <AdminCustomerRegistration source={sources.registrations} onCreated={() => setCustomersRevision(value => value + 1)} />}<CustomersPage key={customersRevision} source={admin ? sources?.customers : undefined} /></> : section === 'Usuarios' ?
+          admin && sources ? <><PendingRegistrations source={sources.registrations} /><UsersPage source={sources.users} /></> : <section className="panel customer-message"><h2>Consulta no disponible</h2><p>La sesión no tiene acceso administrativo habilitado.</p></section>
           : <SectionPlaceholder section={section} />}
       </main>
     </div>

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
-import { isCustomerConflict, validateCustomerEdit } from './customer-edit';
+import { isCustomerConflict, isDuplicateCustomerEmail, validateCustomerEdit } from './customer-edit';
 import type { CustomerEditErrors } from './customer-edit';
 import type { CustomerDetail, CustomerEditDraft } from './types';
 
@@ -69,7 +69,8 @@ export function CustomerEditForm({ customer, preview, onSave, onSaved, onCancel,
     } catch (error) {
       if (!controller.signal.aborted) {
         setSaving(false);
-        setSaveFailed(isCustomerConflict(error) ? 'conflict' : 'error');
+        if (isDuplicateCustomerEmail(error)) { focusInvalid.current = true; setErrors({ email: 'No se puede usar ese correo. Revisalo e intentá nuevamente.' }); }
+        else setSaveFailed(isCustomerConflict(error) ? 'conflict' : 'error');
       }
     }
   }

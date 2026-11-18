@@ -1,5 +1,30 @@
 # SCRUM-20 — Listado administrativo de usuarios
 
+## Invitaciones de identidad
+
+En Usuarios, ADMIN puede generar una invitación para una cuenta interna deshabilitada sin identidad; se muestra el código una sola vez para compartirlo por un canal seguro. Al iniciar sesión con su correo verificado, la persona puede ingresar el código y vincular su identidad; un administrador habilita la cuenta después. Las cuentas no administrativas habilitadas ven una bienvenida limitada hasta que existan sus funciones operativas. Falta validación visual y con identidad real.
+
+
+## Alta local de usuarios internos
+
+ADMIN puede crear cuentas internas deshabilitadas desde Usuarios, con revisión y confirmación. La pantalla informa que falta vincular la identidad y no crea credenciales; la asociación segura aún no está disponible. Se verificaron compilación y contratos, no la interacción con servicios de identidad reales.
+
+
+## Alta administrativa y cuenta de cliente aprobada
+
+En Clientes, ADMIN puede registrar una ficha habilitada sin crear una cuenta, con confirmación y control de correo duplicado. En Usuarios puede deshabilitar o reactivar cuentas de clientes con aprobación inicial registrada; no cambia su rol ni el estado de su ficha comercial. Clientes habilitados ven una bienvenida limitada, sin funciones administrativas; los envíos aún no están implementados. La prueba visual y la conexión con identidad real siguen pendientes.
+
+
+## Autorregistro y habilitación inicial
+
+La web ofrece solicitud para una identidad autenticada sin sesión operativa resuelta y permite a ADMIN revisar solicitudes pendientes desde Usuarios. El correo procede del proveedor y la solicitud requiere confirmación; la habilitación también requiere confirmación. La pantalla y el tenant no se probaron de extremo a extremo con identidad real. Falta alta por administrador y administración posterior del acceso cliente.
+
+
+## Actualización: conexión real de acceso interno
+
+La web conectada permite cambiar rol y estado de cuentas internas mediante la API, con confirmación, detección de conflicto y evidencia de auditoría persistida. El flujo real no permite modificar cuentas cliente ni asignar ese rol hasta implementar su habilitación inicial. La vista previa conserva datos ficticios y su registro temporal. Se verificaron compilación y pruebas de fuentes; resta probar eventos y pantalla con identidad real.
+
+
 Actualización: el panel web y el panel móvil incluyen una conexión de solo lectura con `GET /api/users` para administradores habilitados. La vista previa documentada abajo continúa usando datos ficticios; los cambios de rol o acceso siguen siendo temporales. Falta probar el acceso real con los servicios y dispositivos configurados.
 
 Incremento en `cesarworkbench`: consulta de solo lectura con búsqueda por nombre/email, filtros por rol y estado de acceso, paginación y estados de carga, vacío y error. Se usan los roles existentes: ADMIN (Administrador), OPERATOR (Operador), CUSTOMER (Cliente) y COURIER (Repartidor).

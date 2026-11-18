@@ -39,7 +39,7 @@ export function StatusChangeConfirmation({ kind, activate, name, preview, onConf
     } catch (error) {
       if (!controller.signal.aborted) {
         setSaving(false);
-        setFailed(kind === 'address' && isCustomerConflict(error) ? 'conflict' : 'error');
+        setFailed(isCustomerConflict(error) ? 'conflict' : 'error');
       }
     }
   }
@@ -55,7 +55,7 @@ export function StatusChangeConfirmation({ kind, activate, name, preview, onConf
         <p>La dirección se mostrará como {activate ? 'activa' : 'desactivada'}. Se conservan todos sus datos y no se modifica el estado del cliente.</p>}
       {preview && <p>El cambio es temporal en esta vista previa y se restablece al recargar.</p>}
     </div>
-    {failed && <p className="customer-save-error" role="alert" tabIndex={-1} ref={errorMessage}>{failed === 'conflict' ? 'Debe quedar al menos una dirección activa. Recargá la ficha para ver los cambios recientes.' : `No se pudo completar la ${action}. Podés reintentar o cancelar.`}</p>}
+    {failed && <p className="customer-save-error" role="alert" tabIndex={-1} ref={errorMessage}>{failed === 'conflict' ? (kind === 'address' ? 'Debe quedar al menos una dirección activa. Recargá la ficha para ver los cambios recientes.' : 'No se puede cambiar el estado. Los registros pendientes se habilitan desde solicitudes pendientes. Recargá la ficha.') : `No se pudo completar la ${action}. Podés reintentar o cancelar.`}</p>}
     <div className="customer-edit-actions">
       <button type="button" className="customer-button" ref={cancelButton} disabled={saving} aria-describedby="status-change-description" onClick={failed === 'conflict' ? onReload : onCancel}>{failed === 'conflict' ? 'Recargar ficha' : 'Cancelar'}</button>
       <button type="button" className={`customer-button ${activate ? 'customer-button-primary' : 'customer-button-danger'}`} disabled={saving || failed === 'conflict'} onClick={() => void confirm()}>{saving ? (activate ? 'Reactivando…' : 'Desactivando…') : `Confirmar ${action} ${kind === 'customer' ? 'del' : 'de la'} ${target}`}</button>

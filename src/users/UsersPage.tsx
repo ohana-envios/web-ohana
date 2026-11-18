@@ -1,4 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
+import { InvitationAction } from './InvitationAction';
+import { InternalUserForm } from './InternalUserForm';
 import { UserAccessForm } from './UserAccessForm';
 import { userRoleLabels, userRoles } from './types';
 import type { UserAccessChange, UserList, UserListQuery, UserSummary, UsersSource } from './types';
@@ -6,7 +8,7 @@ import './users.css';
 
 type ListState = { kind: 'loading' } | { kind: 'error' } | { kind: 'ready'; result: UserList };
 
-export function UsersPage({ source, pageSize = 20 }: { source: UsersSource; pageSize?: number }) {
+export function UsersPage({ source, pageSize = 20, preview = false }: { source: UsersSource; pageSize?: number; preview?: boolean }) {
   const [query, setQuery] = useState<UserListQuery>({ search: '', role: 'all', status: 'all', page: 1, pageSize });
   const [state, setState] = useState<ListState>({ kind: 'loading' });
   const [retry, setRetry] = useState(0);
@@ -33,7 +35,7 @@ export function UsersPage({ source, pageSize = 20 }: { source: UsersSource; page
   }, [query, source, retry]);
 
   const filtered = Boolean(query.search || query.role !== 'all' || query.status !== 'all');
-  if (selected) return <UserAccessForm key={selected.id} user={selected} source={source}
+  if (selected) return <UserAccessForm key={selected.id} user={selected} source={source} preview={preview} onReload={() => { setSelected(null); setRetry((value) => value + 1); }}
     onCancel={() => { returning.current = true; setSelected(null); }}
     onSaved={(saved) => { setChange(saved); returning.current = true; setSelected(null); setRetry((value) => value + 1); }} />;
 
@@ -41,14 +43,16 @@ export function UsersPage({ source, pageSize = 20 }: { source: UsersSource; page
     <div className="users-heading"><span className="eyebrow">DIRECTORIO DE ACCESO</span>
       <h2 id="users-heading" tabIndex={-1} ref={heading}>Usuarios y roles</h2><p>Consultá las cuentas de usuario y su estado de acceso.</p>
     </div>
+    <InternalUserForm source={source} onCreated={() => setRetry(value => value + 1)} />
     {change && <aside className="panel user-access-evidence" role="status">
-      <strong>Acceso actualizado en la vista previa: {change.user.displayName}</strong>
-      {change.previewAudit && <>
-        <p>Registro temporal del último cambio · Responsable: {change.previewAudit.actorId} · {new Date(change.previewAudit.occurredAt).toLocaleString('es-UY')}</p>
-        <p>{userRoleLabels[change.previewAudit.previous.role]} → {userRoleLabels[change.previewAudit.next.role]} · {change.previewAudit.previous.enabled ? 'Habilitado' : 'Deshabilitado'} → {change.previewAudit.next.enabled ? 'Habilitado' : 'Deshabilitado'}</p>
+      <strong>Acceso actualizado{preview ? ' en la vista previa' : ''}: {change.user.displayName}</strong>
+      {(change.audit || change.previewAudit) && <>
+        <p>{preview ? 'Registro temporal' : 'Registro de auditoría'} · Responsable: {(change.audit || change.previewAudit)!.actorId} · {new Date((change.audit || change.previewAudit)!.occurredAt).toLocaleString('es-UY')}</p>
+        <p>{userRoleLabels[(change.audit || change.previewAudit)!.previous.role]} → {userRoleLabels[(change.audit || change.previewAudit)!.next.role]} · {(change.audit || change.previewAudit)!.previous.enabled ? 'Habilitado' : 'Deshabilitado'} → {(change.audit || change.previewAudit)!.next.enabled ? 'Habilitado' : 'Deshabilitado'}</p>
       </>}
-      <p>Los cambios y este registro son de prueba; no se guardan en la API.</p>
+      {preview && <p>Los cambios y este registro son de prueba; no se guardan en la API.</p>}
     </aside>}
+    {!preview && <p>La habilitación inicial se realiza desde Clientes pendientes. Las cuentas de clientes ya aprobados pueden habilitarse o deshabilitarse aquí.</p>}
     <div className="panel users-filters">
       <div className="users-field"><label htmlFor="user-search">Buscar usuario</label>
         <input id="user-search" type="search" value={query.search} maxLength={120} placeholder="Nombre o email"
@@ -84,6 +88,7 @@ export function UsersPage({ source, pageSize = 20 }: { source: UsersSource; page
         <div className="user-identity"><h3>{user.displayName}</h3><p>{user.email}</p></div>
         <div><span className="user-label">Rol</span><span className="user-role">{userRoleLabels[user.role]}</span></div>
         <span className={`user-status ${user.enabled ? 'is-enabled' : 'is-disabled'}`}><span aria-hidden="true">{user.enabled ? '●' : '○'}</span>{user.enabled ? 'Acceso habilitado' : 'Acceso deshabilitado'}</span>
+        <InvitationAction source={source} user={user} />
         {source.updateAccess && <button type="button" className="users-button user-access-action" aria-label={`Administrar acceso de ${user.displayName}`} onClick={() => setSelected(user)}>Administrar acceso</button>}
       </li>)}</ul>}
       {state.result.totalPages > 1 && <nav className="users-pagination" aria-label="Páginas de usuarios">

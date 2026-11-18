@@ -43,6 +43,7 @@ export type CustomerList = {
   totalPages: number;
 };
 export type CustomersSource = {
+  inviteCustomer?(id: string, email: string, signal: AbortSignal): Promise<{ code: string; expiresAt: string }>;
   list(query: CustomerListQuery, signal: AbortSignal): Promise<CustomerList>;
   get(id: string, signal: AbortSignal): Promise<CustomerDetail>;
   update?(id: string, draft: CustomerEditDraft, signal: AbortSignal, original?: CustomerDetail): Promise<CustomerDetail>;
