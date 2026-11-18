@@ -1,10 +1,16 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { createPreviewCustomersSource, previewCustomersSource as source } from '../src/customers/preview-source.ts';
-import { validateCustomerEdit } from '../src/customers/customer-edit.ts';
+import { isCustomerConflict, validateCustomerEdit } from '../src/customers/customer-edit.ts';
 
 const query = { search: '', status: 'all', page: 1, pageSize: 3 };
 const signal = () => new AbortController().signal;
+
+test('a stale edit is distinguished from other save errors', () => {
+  assert.equal(isCustomerConflict({ status: 409 }), true);
+  assert.equal(isCustomerConflict({ status: 500 }), false);
+  assert.equal(isCustomerConflict(null), false);
+});
 
 test('preview pages contain distinct summaries and consistent totals', async () => {
   const first = await source.list(query, signal());
@@ -37,7 +43,7 @@ test('preview filters by enabled state and matches case-insensitive contact sear
 test('preview details retain multiple addresses and missing contact data without invention', async () => {
   assert.equal((await source.get('demo-atelier', signal())).addresses.length, 2);
   const person = await source.get('demo-persona', signal());
-  assert.equal(person.addresses.length, 0);
+  assert.equal(person.addresses.length, 1);
   assert.equal(person.phone, null);
   await assert.rejects(source.get('missing', signal()));
 });

@@ -20,15 +20,15 @@ test('adding a preview address assigns an id and updates only the selected custo
   const source = createPreviewCustomersSource();
   const other = await source.get('demo-atelier', signal());
   const saved = await source.addAddress('demo-persona', { ...draft, id: 'injected', customerId: 'demo-atelier' }, signal());
-  assert.equal(saved.addressCount, 1);
-  assert.equal(saved.addresses.length, 1);
-  assert.ok(saved.addresses[0].id);
-  assert.notEqual(saved.addresses[0].id, 'injected');
-  assert.equal(saved.addresses[0].street, 'Calle nueva');
+  assert.equal(saved.addressCount, 2);
+  assert.equal(saved.addresses.length, 2);
+  assert.ok(saved.addresses[1].id);
+  assert.notEqual(saved.addresses[1].id, 'injected');
+  assert.equal(saved.addresses[1].street, 'Calle nueva');
   assert.deepEqual(await source.get('demo-atelier', signal()), other);
   const listed = await source.list({ search: 'Persona', status: 'all', page: 1, pageSize: 20 }, signal());
-  assert.equal(listed.items[0].addressCount, 1);
-  assert.equal((await createPreviewCustomersSource().get('demo-persona', signal())).addresses.length, 0);
+  assert.equal(listed.items[0].addressCount, 2);
+  assert.equal((await createPreviewCustomersSource().get('demo-persona', signal())).addresses.length, 1);
 });
 
 test('editing an address preserves its id, other addresses and customer fields', async () => {
@@ -58,13 +58,13 @@ test('cross-customer, missing, invalid and cancelled address writes leave data u
   await assert.rejects(source.addAddress('demo-atelier', draft, controller.signal), { name: 'AbortError' });
   await assert.rejects(source.updateAddress('demo-atelier', addressId, draft, controller.signal), { name: 'AbortError' });
   assert.deepEqual(await source.get('demo-atelier', signal()), before);
-  assert.equal((await source.get('demo-persona', signal())).addresses.length, 0);
+  assert.equal((await source.get('demo-persona', signal())).addresses.length, 1);
 });
 
 test('duplicate warnings ignore case and extra spacing and exclude the address being edited', async () => {
   const source = createPreviewCustomersSource();
   const saved = await source.addAddress('demo-persona', draft, signal());
   assert.equal(hasDuplicateAddress(saved.addresses, { ...draft, street: ' CALLE   NUEVA ' }), true);
-  assert.equal(hasDuplicateAddress(saved.addresses, draft, saved.addresses[0].id), false);
+  assert.equal(hasDuplicateAddress(saved.addresses, draft, saved.addresses[1].id), false);
   assert.equal(hasDuplicateAddress(saved.addresses, { ...draft, number: '12' }), false);
 });

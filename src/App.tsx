@@ -1,21 +1,43 @@
 import { useAuth } from 'react-oidc-context';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { AppConfig } from './config';
 import { createApiClient } from './api';
 import { CustomersPage } from './customers/CustomersPage';
+import { UsersPage } from './users/UsersPage';
+import { createApiCustomersSource, createApiUsersSource, getOperationalSession } from './api-sources';
+import { isCurrentAdministrator, type OperationalSession } from './operational-session';
 
-type Section = 'Resumen' | 'Envíos' | 'Clientes' | 'Rutas';
+type Section = 'Resumen' | 'Envíos' | 'Clientes' | 'Rutas' | 'Usuarios';
 type Health = 'checking' | 'up' | 'down';
 type SessionCheck = 'checking' | 'verified' | 'failed';
 
-const sections: Section[] = ['Resumen', 'Envíos', 'Clientes', 'Rutas'];
+const sections: Section[] = ['Resumen', 'Envíos', 'Clientes', 'Rutas', 'Usuarios'];
 
 function Dashboard({ config }: { config: AppConfig }) {
   const { user, signoutRedirect } = useAuth();
   const [section, setSection] = useState<Section>('Resumen');
   const [health, setHealth] = useState<Health>('checking');
   const [sessionCheck, setSessionCheck] = useState<SessionCheck>('checking');
+  const [operationalSession, setOperationalSession] = useState<OperationalSession | null>(null);
   const accessToken = user?.access_token;
+
+  const sources = useMemo(() => {
+    if (!accessToken) return null;
+    const request = createApiClient(config.apiBaseUrl, async () => accessToken);
+    return { customers: createApiCustomersSource(request), users: createApiUsersSource(request) };
+  }, [accessToken, config.apiBaseUrl]);
+
+  useEffect(() => {
+    setOperationalSession(null);
+    if (!accessToken) return;
+    const controller = new AbortController();
+    const request = createApiClient(config.apiBaseUrl, async () => accessToken);
+    getOperationalSession(request, controller.signal)
+      .then((user) => { if (!controller.signal.aborted) setOperationalSession({ token: accessToken, user }); })
+      .catch(() => { if (!controller.signal.aborted) setOperationalSession(null); });
+    return () => controller.abort();
+  }, [accessToken, config.apiBaseUrl]);
+  const admin = isCurrentAdministrator(accessToken, operationalSession);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -49,7 +71,7 @@ function Dashboard({ config }: { config: AppConfig }) {
         <div className="brand"><span className="brand-mark">O</span><div><strong>Ohana</strong><small>Envíos</small></div></div>
         <p className="nav-label">OPERACIONES</p>
         <nav aria-label="Secciones principales">
-          {sections.map((item) => (
+          {sections.filter((item) => item !== 'Usuarios' || admin).map((item) => (
             <button key={item} type="button" className={`nav-item ${section === item ? 'active' : ''}`} onClick={() => setSection(item)}>{item}</button>
           ))}
         </nav>
@@ -60,7 +82,9 @@ function Dashboard({ config }: { config: AppConfig }) {
       </aside>
       <main className="content">
         <header className="topbar"><div><span className="eyebrow">PANEL DE GESTIÓN</span><h1>{section}</h1></div><div className="account"><span>{user?.profile.name ?? user?.profile.email ?? 'Usuario'}</span><button type="button" onClick={() => void signoutRedirect()}>Salir</button></div></header>
-        {section === 'Resumen' ? <Overview /> : section === 'Clientes' ? <CustomersPage /> : <SectionPlaceholder section={section} />}
+        {section === 'Resumen' ? <Overview /> : section === 'Clientes' ? <CustomersPage source={admin ? sources?.customers : undefined} /> : section === 'Usuarios' ?
+          admin && sources ? <UsersPage source={sources.users} /> : <section className="panel customer-message"><h2>Consulta no disponible</h2><p>La sesión no tiene acceso administrativo habilitado.</p></section>
+          : <SectionPlaceholder section={section} />}
       </main>
     </div>
   );
@@ -76,8 +100,8 @@ function Overview() {
   </>;
 }
 
-function SectionPlaceholder({ section }: { section: Exclude<Section, 'Resumen' | 'Clientes'> }) {
-  const descriptions: Record<Exclude<Section, 'Resumen' | 'Clientes'>, string> = {
+function SectionPlaceholder({ section }: { section: Exclude<Section, 'Resumen' | 'Clientes' | 'Usuarios'> }) {
+  const descriptions: Record<Exclude<Section, 'Resumen' | 'Clientes' | 'Usuarios'>, string> = {
     Envíos: 'Listado, alta y seguimiento de solicitudes de envío.',
     Rutas: 'Planificación y asignación de recorridos.',
   };

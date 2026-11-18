@@ -1,5 +1,11 @@
 # SCRUM-21 — Vista previa de clientes
 
+Actualización: la API registra los endpoints de lectura de clientes para administradores habilitados, según la decisión del usuario. Los paneles reales de web y móvil se conectaron en código a esa lectura, pero falta validarlos con identidad y base de datos reales. Esta vista previa sigue usando datos ficticios. Las referencias posteriores a un módulo sin controladores o a la conexión pendiente describen etapas anteriores.
+
+La edición de nombre y contacto también está conectada en los paneles reales a la API; falta probarla con servicios reales. Los formularios de esta vista previa continúan con guardado temporal.
+
+El alta, edición, desactivación y reactivación de direcciones están conectadas en código a la API para administradores; se verificaron contra PostgreSQL aislado con identidad simulada. La migración del estado debe coordinarse antes de aplicarla en ambientes compartidos. Esta vista previa conserva sus cambios temporales. Las notas posteriores que describen la escritura como exclusivamente temporal corresponden a etapas anteriores.
+
 Primer incremento en `cesarworkbench`: consulta de clientes existentes, búsqueda, filtro de habilitación, paginación y navegación a la ficha con contactos y direcciones habituales. Se conserva la estructura visual del panel y se toma como referencia la sección Clientes del prototipo HTML aportado.
 
 ## Segundo incremento: edición temporal
@@ -83,6 +89,19 @@ La fuente de datos de prueba se verifica sin dependencias adicionales, con Node 
 node --experimental-strip-types --test test/*.test.mjs
 ```
 
-Las 19 pruebas cubren paginación, filtros, búsqueda, detalle, edición de clientes, alta y edición de direcciones, avisos de duplicados, desactivación y reactivación sin borrar datos ni cambiar estados de otros registros, normalización, protección de campos y operaciones canceladas o fallidas. No ejecutan eventos de React ni reemplazan la revisión de la interfaz en un navegador.
+Las pruebas cubren paginación, filtros, búsqueda, detalle, edición de clientes, alta y edición de direcciones, avisos de duplicados, desactivación y reactivación sin borrar datos ni cambiar estados de otros registros, normalización, protección de campos y operaciones canceladas o fallidas. No ejecutan eventos de React ni reemplazan la revisión de la interfaz en un navegador.
 
 `npm run build` ejecuta TypeScript y genera el sitio normal. Vite no incluye `customers-preview.html` como entrada de producción; sus datos ficticios se importan únicamente en desarrollo. La verificación visual y por teclado requiere un navegador; el build por sí solo no la reemplaza.
+
+
+## Ajustes de correspondencia con el prototipo ? 14/11/2026
+
+Regla confirmada por el usuario: debe quedar al menos una direcci?n activa. Para desactivar la ?ltima se debe agregar o reactivar otra primero. Se bloquea el bot?n, se explica el motivo y la fuente rechaza la operaci?n sin modificar datos. Las direcciones desactivadas se conservan para consulta. Los ejemplos iniciales tienen al menos una direcci?n. Esta regla deber? validarse tambi?n en el backend al implementar las escrituras; hoy solo existe en la vista previa.
+
+Las vistas previas de Clientes y Usuarios usan ahora la paleta verde, tipograf?a Plus Jakarta Sans (con alternativa del sistema), radios, superficies y navegaci?n inferior inspirados en el prototipo guardado. La navegaci?n ofrece ?nicamente las dos secciones implementadas. No constituye una reproducci?n completa de todas las vistas del HTML. No se modific? la pantalla de autenticaci?n del compa?ero.
+
+El estado de Cliente y el acceso de Usuario contin?an separados: su relaci?n operativa requiere acuerdo antes de implementar efectos sobre cuentas reales. Auth0 en el documento frente a ZITADEL en el c?digo sigue siendo una diferencia a coordinar. Persistencia, auditor?a, aprobaci?n y administraci?n completa de usuarios siguen pendientes.
+
+Alcance por repositorio: las interfaces de este trabajo est?n en web-ohana; la API contiene las bases documentadas de lectura y acceso; app-mobile-ohana conserva su base Expo y todav?a no incorpora Clientes/Usuarios de este trabajo. La web responsive no reemplaza esa implementaci?n m?vil.
+
+Verificaci?n de esta entrega: 24 pruebas de datos y validaci?n aprobadas, TypeScript y build aprobados; las dos p?ginas y sus nuevos m?dulos responden HTTP 200 en Vite. La nueva apariencia y navegaci?n requieren revisi?n visual y por teclado; las confirmaciones visuales anteriores no validan este ajuste.

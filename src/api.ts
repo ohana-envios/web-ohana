@@ -7,7 +7,7 @@ export function createApiClient(baseUrl: string, getToken: () => Promise<string>
       ...init,
       headers,
     });
-    if (!response.ok) throw new Error(`La API respondió ${response.status}`);
+    if (!response.ok) throw Object.assign(new Error(`La API respondió ${response.status}`), { status: response.status });
     return response.json() as Promise<T>;
   };
 }

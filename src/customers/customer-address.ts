@@ -2,8 +2,12 @@ import type { CustomerAddress, CustomerAddressDraft } from './types';
 
 export const addressFieldLimits = { label: 80, street: 160, number: 30, locality: 80, department: 80, reference: 240, notes: 500 } as const;
 export type AddressErrors = Partial<Record<keyof CustomerAddressDraft, string>>;
-type AddressData = Omit<CustomerAddress, 'id'>;
+type AddressData = Omit<CustomerAddress, 'id' | 'active'>;
 type Validation = { valid: true; data: AddressData } | { valid: false; errors: AddressErrors };
+
+export function isAddressActive(address: Pick<CustomerAddress, 'id' | 'active'>, inactiveIds: readonly string[]): boolean {
+  return address.active ?? !inactiveIds.includes(address.id);
+}
 
 export function validateCustomerAddress(draft: CustomerAddressDraft): Validation {
   const errors: AddressErrors = {};

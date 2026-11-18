@@ -3,6 +3,10 @@ import type { CustomerEditData, CustomerEditDraft } from './types';
 export type CustomerEditErrors = Partial<Record<keyof CustomerEditDraft, string>>;
 type Validation = { valid: true; data: CustomerEditData } | { valid: false; errors: CustomerEditErrors };
 
+export function isCustomerConflict(error: unknown): boolean {
+  return Boolean(error && typeof error === 'object' && 'status' in error && error.status === 409);
+}
+
 export function validateCustomerEdit(draft: CustomerEditDraft): Validation {
   const errors: CustomerEditErrors = {};
   const values = { displayName: '', legalName: '', email: '', phone: '' };

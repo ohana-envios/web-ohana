@@ -21,6 +21,7 @@ export type CustomerAddress = {
   department: string;
   reference: string | null;
   notes: string | null;
+  active?: boolean;
 };
 
 export type CustomerDetail = CustomerSummary & {
@@ -44,9 +45,9 @@ export type CustomerList = {
 export type CustomersSource = {
   list(query: CustomerListQuery, signal: AbortSignal): Promise<CustomerList>;
   get(id: string, signal: AbortSignal): Promise<CustomerDetail>;
-  update?(id: string, draft: CustomerEditDraft, signal: AbortSignal): Promise<CustomerDetail>;
+  update?(id: string, draft: CustomerEditDraft, signal: AbortSignal, original?: CustomerDetail): Promise<CustomerDetail>;
   addAddress?(customerId: string, draft: CustomerAddressDraft, signal: AbortSignal): Promise<CustomerDetail>;
-  updateAddress?(customerId: string, addressId: string, draft: CustomerAddressDraft, signal: AbortSignal): Promise<CustomerDetail>;
+  updateAddress?(customerId: string, addressId: string, draft: CustomerAddressDraft, signal: AbortSignal, original?: CustomerAddress): Promise<CustomerDetail>;
   deactivateCustomer?(customerId: string, signal: AbortSignal): Promise<CustomerDetail>;
   deactivateAddress?(customerId: string, addressId: string, signal: AbortSignal): Promise<CustomerDetail>;
   reactivateCustomer?(customerId: string, signal: AbortSignal): Promise<CustomerDetail>;

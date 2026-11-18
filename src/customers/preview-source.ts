@@ -28,14 +28,27 @@ const customers: CustomerDetail[] = [
   {
     id: 'demo-persona', type: 'PERSON', displayName: 'Persona de ejemplo',
     legalName: null, documentType: null, documentNumber: null,
-    email: 'persona@example.invalid', phone: null, enabled: false, addressCount: 0, addresses: [],
+    email: 'persona@example.invalid', phone: null, enabled: false, addressCount: 1,
+    addresses: [{ id: 'demo-address-4', label: 'Domicilio', street: 'Calle ficticia', number: '10',
+      locality: 'Centro', department: 'Montevideo', reference: null, notes: null }],
   },
   {
     id: 'demo-tienda', type: 'COMPANY', displayName: 'Tienda de ejemplo',
     legalName: null, documentType: null, documentNumber: null,
-    email: null, phone: null, enabled: false, addressCount: 0, addresses: [],
+    email: null, phone: null, enabled: false, addressCount: 1,
+    addresses: [{ id: 'demo-address-5', label: 'Local', street: 'Avenida ficticia', number: '20',
+      locality: 'Cordón', department: 'Montevideo', reference: null, notes: null }],
   },
 ];
+
+function copyCustomer(customer: CustomerDetail): CustomerDetail {
+  return { ...customer, addresses: customer.addresses.map((address) => ({ ...address })),
+    ...(customer.preview ? { preview: { inactiveAddressIds: [...customer.preview.inactiveAddressIds] } } : {}) };
+}
+
+function checkCancellation(signal: AbortSignal) {
+  if (signal.aborted) { const error = new Error('Operaci?n cancelada'); error.name = 'AbortError'; throw error; }
+}
 
 function summary(customer: CustomerDetail): CustomerSummary {
   return {
@@ -46,10 +59,11 @@ function summary(customer: CustomerDetail): CustomerSummary {
 }
 
 export function createPreviewCustomersSource(): Required<CustomersSource> {
-  const records = structuredClone(customers);
+  const records = customers.map(copyCustomer);
+  let nextAddressId = 0;
   return {
     async list(query, signal) {
-      signal.throwIfAborted();
+      checkCancellation(signal);
       const search = query.search.trim().toLocaleLowerCase('es');
       const filtered = records.filter((customer) => {
         if (query.status !== 'all' && customer.enabled !== (query.status === 'enabled')) return false;
@@ -64,67 +78,71 @@ export function createPreviewCustomersSource(): Required<CustomersSource> {
       };
     },
     async get(id, signal) {
-      signal.throwIfAborted();
+      checkCancellation(signal);
       const customer = records.find((item) => item.id === id);
       if (!customer) throw new Error('Cliente de prueba no encontrado');
-      return structuredClone(customer);
+      return copyCustomer(customer);
     },
     async update(id, draft, signal) {
-      signal.throwIfAborted();
+      checkCancellation(signal);
       const customer = records.find((item) => item.id === id);
       if (!customer) throw new Error('Cliente de prueba no encontrado');
       const result = validateCustomerEdit(draft);
       if (!result.valid) throw new Error('Los datos del cliente no son válidos');
       // Only these four fields can change; never copy arbitrary properties from the draft.
       Object.assign(customer, result.data);
-      return structuredClone(customer);
+      return copyCustomer(customer);
     },
     async addAddress(customerId, draft, signal) {
-      signal.throwIfAborted();
+      checkCancellation(signal);
       const customer = records.find((item) => item.id === customerId);
       if (!customer) throw new Error('Cliente de prueba no encontrado');
       const result = validateCustomerAddress(draft);
       if (!result.valid) throw new Error('La dirección no es válida');
-      customer.addresses.push({ id: `demo-address-${crypto.randomUUID()}`, ...result.data });
+      customer.addresses.push({ id: `demo-address-added-${++nextAddressId}`, ...result.data });
       customer.addressCount = customer.addresses.length;
-      return structuredClone(customer);
+      return copyCustomer(customer);
     },
     async updateAddress(customerId, addressId, draft, signal) {
-      signal.throwIfAborted();
+      checkCancellation(signal);
       const customer = records.find((item) => item.id === customerId);
       const address = customer?.addresses.find((item) => item.id === addressId);
       if (!customer || !address) throw new Error('Dirección de prueba no encontrada para este cliente');
       const result = validateCustomerAddress(draft);
       if (!result.valid) throw new Error('La dirección no es válida');
       Object.assign(address, result.data);
-      return structuredClone(customer);
+      return copyCustomer(customer);
     },
     async deactivateCustomer(customerId, signal) {
-      signal.throwIfAborted();
+      checkCancellation(signal);
       const customer = records.find((item) => item.id === customerId);
       if (!customer) throw new Error('Cliente de prueba no encontrado');
       customer.enabled = false;
-      return structuredClone(customer);
+      return copyCustomer(customer);
     },
     async deactivateAddress(customerId, addressId, signal) {
-      signal.throwIfAborted();
+      checkCancellation(signal);
       const customer = records.find((item) => item.id === customerId);
       if (!customer?.addresses.some((address) => address.id === addressId)) {
         throw new Error('Dirección de prueba no encontrada para este cliente');
       }
+      const inactiveIds = customer.preview?.inactiveAddressIds ?? [];
+      if (!inactiveIds.includes(addressId) && customer.addresses.filter((address) => !inactiveIds.includes(address.id)).length <= 1) {
+        throw new Error('Debe quedar al menos una dirección activa. Agregá o reactivá otra antes de desactivar esta.');
+      }
       customer.preview ??= { inactiveAddressIds: [] };
       if (!customer.preview.inactiveAddressIds.includes(addressId)) customer.preview.inactiveAddressIds.push(addressId);
-      return structuredClone(customer);
+      return copyCustomer(customer);
     },
     async reactivateCustomer(customerId, signal) {
-      signal.throwIfAborted();
+      checkCancellation(signal);
       const customer = records.find((item) => item.id === customerId);
       if (!customer) throw new Error('Cliente de prueba no encontrado');
       customer.enabled = true;
-      return structuredClone(customer);
+      return copyCustomer(customer);
     },
     async reactivateAddress(customerId, addressId, signal) {
-      signal.throwIfAborted();
+      checkCancellation(signal);
       const customer = records.find((item) => item.id === customerId);
       if (!customer?.addresses.some((address) => address.id === addressId)) {
         throw new Error('Dirección de prueba no encontrada para este cliente');
@@ -132,7 +150,7 @@ export function createPreviewCustomersSource(): Required<CustomersSource> {
       if (customer.preview) {
         customer.preview.inactiveAddressIds = customer.preview.inactiveAddressIds.filter((id) => id !== addressId);
       }
-      return structuredClone(customer);
+      return copyCustomer(customer);
     },
   };
 }

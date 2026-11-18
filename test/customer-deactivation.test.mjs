@@ -1,5 +1,13 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
+import { isAddressActive } from '../src/customers/customer-address.ts';
+
+test('address status reflects persistent data and preserves preview compatibility', () => {
+  assert.equal(isAddressActive({ id: 'a', active: false }, []), false);
+  assert.equal(isAddressActive({ id: 'a', active: true }, ['a']), true);
+  assert.equal(isAddressActive({ id: 'a' }, ['a']), false);
+  assert.equal(isAddressActive({ id: 'a' }, []), true);
+});
 import { createPreviewCustomersSource } from '../src/customers/preview-source.ts';
 
 const signal = () => new AbortController().signal;
@@ -63,13 +71,15 @@ test('reactivating an address preserves other inactive addresses and does not en
   const source = createPreviewCustomersSource();
   const before = await source.get('demo-atelier', signal());
   const [first, second] = before.addresses;
+  await source.addAddress('demo-atelier', { label: 'Alternativa', street: 'Nueva calle', number: '45', locality: 'Centro', department: 'Montevideo', reference: '', notes: '' }, signal());
   await source.deactivateAddress('demo-atelier', first.id, signal());
   await source.deactivateAddress('demo-atelier', second.id, signal());
   await source.deactivateCustomer('demo-atelier', signal());
   const restored = await source.reactivateAddress('demo-atelier', first.id, signal());
   assert.equal(restored.enabled, false);
   assert.deepEqual(restored.preview.inactiveAddressIds, [second.id]);
-  assert.deepEqual(restored.addresses, before.addresses);
+  assert.deepEqual(restored.addresses.slice(0, 2), before.addresses);
+  assert.equal(restored.addresses.length, 3);
   assert.deepEqual(await source.reactivateAddress('demo-atelier', first.id, signal()), restored);
 });
 
@@ -85,4 +95,19 @@ test('missing, cross-customer and cancelled reactivations leave the customer unc
   await assert.rejects(source.reactivateCustomer('demo-atelier', controller.signal), { name: 'AbortError' });
   await assert.rejects(source.reactivateAddress('demo-atelier', 'demo-address-1', controller.signal), { name: 'AbortError' });
   assert.deepEqual(await source.get('demo-atelier', signal()), before);
+});
+
+test('the last active address cannot be deactivated until another is added or reactivated', async () => {
+  const source = createPreviewCustomersSource();
+  await source.deactivateAddress('demo-atelier', 'demo-address-1', signal());
+  const before = await source.get('demo-atelier', signal());
+  await assert.rejects(source.deactivateAddress('demo-atelier', 'demo-address-2', signal()), /al menos una dirección activa/);
+  assert.deepEqual(await source.get('demo-atelier', signal()), before);
+  await source.reactivateAddress('demo-atelier', 'demo-address-1', signal());
+  await source.deactivateAddress('demo-atelier', 'demo-address-2', signal());
+  await source.addAddress('demo-atelier', { label: '', street: 'Alternativa', number: '12', locality: 'Centro', department: 'Montevideo', reference: '', notes: '' }, signal());
+  const saved = await source.deactivateAddress('demo-atelier', 'demo-address-1', signal());
+  assert.equal(saved.addresses.length - saved.preview.inactiveAddressIds.length, 1);
+  await source.deactivateCustomer('demo-libreria', signal());
+  await assert.rejects(source.deactivateAddress('demo-libreria', 'demo-address-3', signal()), /al menos una dirección activa/);
 });

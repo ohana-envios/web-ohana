@@ -6,17 +6,17 @@ import './customers.css';
 
 type ListState = { kind: 'loading' } | { kind: 'error' } | { kind: 'ready'; result: CustomerList };
 
-export function CustomersPage({ source, pageSize = 20 }: { source?: CustomersSource; pageSize?: number }) {
+export function CustomersPage({ source, pageSize = 20, preview = false }: { source?: CustomersSource; pageSize?: number; preview?: boolean }) {
   if (!source) return <section className="panel customer-message">
     <span className="eyebrow">GESTIÓN DE CLIENTES</span>
     <h2>Consulta de clientes en preparación</h2>
     <p>El listado estará disponible cuando se complete la conexión y los permisos de acceso.</p>
     {import.meta.env.DEV && <a className="customer-link" href="/customers-preview.html">Abrir vista previa con datos ficticios →</a>}
   </section>;
-  return <CustomerBrowser source={source} pageSize={pageSize} />;
+  return <CustomerBrowser source={source} pageSize={pageSize} preview={preview} />;
 }
 
-function CustomerBrowser({ source, pageSize }: { source: CustomersSource; pageSize: number }) {
+function CustomerBrowser({ source, pageSize, preview }: { source: CustomersSource; pageSize: number; preview: boolean }) {
   const [query, setQuery] = useState<CustomerListQuery>({ search: '', status: 'all', page: 1, pageSize });
   const [state, setState] = useState<ListState>({ kind: 'loading' });
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -50,7 +50,7 @@ function CustomerBrowser({ source, pageSize }: { source: CustomersSource; pageSi
     }
   }, [selectedId]);
 
-  if (selectedId) return <CustomerDetail id={selectedId} source={source} onUpdated={() => setRetry((value) => value + 1)} onBack={() => {
+  if (selectedId) return <CustomerDetail id={selectedId} source={source} preview={preview} onUpdated={() => setRetry((value) => value + 1)} onBack={() => {
     returning.current = true;
     setSelectedId(null);
   }} />;

@@ -1,16 +1,19 @@
 import { useEffect, useRef, useState } from 'react';
 import type { CustomerDetail } from './types';
+import { isCustomerConflict } from './customer-edit';
 
-export function StatusChangeConfirmation({ kind, activate, name, onConfirm, onSaved, onCancel }: {
+export function StatusChangeConfirmation({ kind, activate, name, preview, onConfirm, onSaved, onCancel, onReload }: {
   kind: 'customer' | 'address';
   activate: boolean;
   name: string;
+  preview: boolean;
   onConfirm(signal: AbortSignal): Promise<CustomerDetail>;
   onSaved(customer: CustomerDetail): void;
   onCancel(): void;
+  onReload(): void;
 }) {
   const [saving, setSaving] = useState(false);
-  const [failed, setFailed] = useState(false);
+  const [failed, setFailed] = useState<'error' | 'conflict' | null>(null);
   const cancelButton = useRef<HTMLButtonElement>(null);
   const errorMessage = useRef<HTMLParagraphElement>(null);
   const request = useRef<AbortController | null>(null);
@@ -22,9 +25,9 @@ export function StatusChangeConfirmation({ kind, activate, name, onConfirm, onSa
   useEffect(() => { if (failed) errorMessage.current?.focus(); }, [failed]);
 
   async function confirm() {
-    if (saving) return;
+    if (saving || failed === 'conflict') return;
     setSaving(true);
-    setFailed(false);
+    setFailed(null);
     const controller = new AbortController();
     request.current = controller;
     try {
@@ -33,10 +36,10 @@ export function StatusChangeConfirmation({ kind, activate, name, onConfirm, onSa
         setSaving(false);
         onSaved(saved);
       }
-    } catch {
+    } catch (error) {
       if (!controller.signal.aborted) {
         setSaving(false);
-        setFailed(true);
+        setFailed(kind === 'address' && isCustomerConflict(error) ? 'conflict' : 'error');
       }
     }
   }
@@ -50,12 +53,12 @@ export function StatusChangeConfirmation({ kind, activate, name, onConfirm, onSa
     <div id="status-change-description" className="customer-muted">
       {kind === 'customer' ? <p>El cliente se mostrará como {activate ? 'habilitado' : 'deshabilitado'}. Su ficha y sus direcciones se conservan; esta acción no cambia su cuenta de acceso ni sus permisos. El estado de sus direcciones se mantiene.</p> :
         <p>La dirección se mostrará como {activate ? 'activa' : 'desactivada'}. Se conservan todos sus datos y no se modifica el estado del cliente.</p>}
-      <p>El cambio es temporal en esta vista previa y se restablece al recargar.</p>
+      {preview && <p>El cambio es temporal en esta vista previa y se restablece al recargar.</p>}
     </div>
-    {failed && <p className="customer-save-error" role="alert" tabIndex={-1} ref={errorMessage}>No se pudo completar la {action}. Podés reintentar o cancelar.</p>}
+    {failed && <p className="customer-save-error" role="alert" tabIndex={-1} ref={errorMessage}>{failed === 'conflict' ? 'Debe quedar al menos una dirección activa. Recargá la ficha para ver los cambios recientes.' : `No se pudo completar la ${action}. Podés reintentar o cancelar.`}</p>}
     <div className="customer-edit-actions">
-      <button type="button" className="customer-button" ref={cancelButton} disabled={saving} aria-describedby="status-change-description" onClick={onCancel}>Cancelar</button>
-      <button type="button" className={`customer-button ${activate ? 'customer-button-primary' : 'customer-button-danger'}`} disabled={saving} onClick={() => void confirm()}>{saving ? (activate ? 'Reactivando…' : 'Desactivando…') : `Confirmar ${action} ${kind === 'customer' ? 'del' : 'de la'} ${target}`}</button>
+      <button type="button" className="customer-button" ref={cancelButton} disabled={saving} aria-describedby="status-change-description" onClick={failed === 'conflict' ? onReload : onCancel}>{failed === 'conflict' ? 'Recargar ficha' : 'Cancelar'}</button>
+      <button type="button" className={`customer-button ${activate ? 'customer-button-primary' : 'customer-button-danger'}`} disabled={saving || failed === 'conflict'} onClick={() => void confirm()}>{saving ? (activate ? 'Reactivando…' : 'Desactivando…') : `Confirmar ${action} ${kind === 'customer' ? 'del' : 'de la'} ${target}`}</button>
     </div>
   </section>;
 }
