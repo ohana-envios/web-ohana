@@ -1,5 +1,5 @@
 import { useAuth } from 'react-oidc-context';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import type { AppConfig } from './config';
 import { createApiClient } from './api';
 import { SelfCustomerPage } from './SelfCustomerPage';
@@ -25,6 +25,7 @@ function Dashboard({ config }: { config: AppConfig }) {
   const [health, setHealth] = useState<Health>('checking');
   const [sessionCheck, setSessionCheck] = useState<SessionCheck>('checking');
   const [operationalSession, setOperationalSession] = useState<OperationalSession | null>(null);
+  const [canInvite, setCanInvite] = useState(false);
   const accessToken = user?.access_token;
 
   const sources = useMemo(() => {
@@ -44,6 +45,22 @@ function Dashboard({ config }: { config: AppConfig }) {
     return () => controller.abort();
   }, [accessToken, config.apiBaseUrl]);
   const admin = isCurrentAdministrator(accessToken, operationalSession);
+
+  useEffect(() => {
+    if (!accessToken) {
+      setCanInvite(false);
+      return;
+    }
+    setCanInvite(false);
+    const controller = new AbortController();
+    const request = createApiClient(config.apiBaseUrl, async () => accessToken);
+    request<{ canInvite: boolean }>('/api/users/invitations/access', { signal: controller.signal })
+      .then((result) => { if (!controller.signal.aborted) setCanInvite(result.canInvite); })
+      .catch((error: unknown) => {
+        if (!controller.signal.aborted && error instanceof Error && error.name !== 'AbortError') setCanInvite(false);
+      });
+    return () => controller.abort();
+  }, [accessToken, config.apiBaseUrl]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -84,7 +101,7 @@ function Dashboard({ config }: { config: AppConfig }) {
         <div className="brand"><span className="brand-mark">O</span><div><strong>Ohana</strong><small>Envíos</small></div></div>
         <p className="nav-label">OPERACIONES</p>
         <nav aria-label="Secciones principales">
-          {sections.filter((item) => item !== 'Usuarios' || admin).map((item) => (
+          {sections.filter((item) => item !== 'Usuarios' || admin || canInvite).map((item) => (
             <button key={item} type="button" className={`nav-item ${section === item ? 'active' : ''}`} onClick={() => setSection(item)}>{item}</button>
           ))}
         </nav>
@@ -96,7 +113,7 @@ function Dashboard({ config }: { config: AppConfig }) {
       <main className="content">
         <header className="topbar"><div><span className="eyebrow">PANEL DE GESTIÓN</span><h1>{section}</h1></div><div className="account"><span>{user?.profile.name ?? user?.profile.email ?? 'Usuario'}</span><button type="button" onClick={() => void signoutRedirect()}>Salir</button></div></header>
         {section === 'Resumen' ? <>{!operationalSession && sessionCheck === 'verified' && sources && <><InvitationClaim source={sources.registrations} /><RegistrationForm source={sources.registrations} /></>}<Overview /></> : section === 'Clientes' ? <>{admin && sources && <AdminCustomerRegistration source={sources.registrations} onCreated={() => setCustomersRevision(value => value + 1)} />}<CustomersPage key={customersRevision} source={admin ? sources?.customers : undefined} /></> : section === 'Usuarios' ?
-          admin && sources ? <><PendingRegistrations source={sources.registrations} /><UsersPage source={sources.users} /></> : <section className="panel customer-message"><h2>Consulta no disponible</h2><p>La sesión no tiene acceso administrativo habilitado.</p></section>
+          <>{canInvite && accessToken && <UserInvitations config={config} accessToken={accessToken} />} {admin && sources && <><PendingRegistrations source={sources.registrations} /><UsersPage source={sources.users} /></>}</>
           : <SectionPlaceholder section={section} />}
       </main>
     </div>
@@ -111,6 +128,51 @@ function Overview() {
     </div>
     <section className="panel"><div className="panel-heading"><div><span className="eyebrow">SEGUIMIENTO</span><h2>Últimos envíos</h2></div></div><div className="empty"><span aria-hidden="true">◫</span><h3>Todavía no hay envíos para mostrar</h3><p>Cuando la API incorpore los casos de uso de envíos, aparecerán aquí.</p></div></section>
   </>;
+}
+
+function UserInvitations({ config, accessToken }: { config: AppConfig; accessToken: string }) {
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState<{ kind: 'success' | 'error'; text: string } | null>(null);
+  const [email, setEmail] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+
+  async function submit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setBusy(true);
+    setMessage(null);
+    try {
+      const request = createApiClient(config.apiBaseUrl, async () => accessToken);
+      const result = await request<{ email: string }>('/api/users/invitations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, firstName, lastName }),
+      });
+      setMessage({ kind: 'success', text: `Invitación enviada a ${result.email}. La persona podrá activar su cuenta y configurar el acceso.` });
+      setEmail('');
+      setFirstName('');
+      setLastName('');
+    } catch (error) {
+      setMessage({ kind: 'error', text: error instanceof Error ? error.message : 'No se pudo enviar la invitación.' });
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return <section className="panel user-invitations">
+    <span className="eyebrow">ACCESO A LA PLATAFORMA</span>
+    <h2>Invitar por correo</h2>
+    <p className="form-intro">ZITADEL enviará un correo para verificar la dirección y configurar el acceso. La política de seguridad solicitará MFA al iniciar sesión.</p>
+    <form onSubmit={(event) => void submit(event)}>
+      <div className="form-grid">
+        <label>Nombre<input required maxLength={100} autoComplete="given-name" value={firstName} onChange={(event) => setFirstName(event.target.value)} /></label>
+        <label>Apellido<input required maxLength={100} autoComplete="family-name" value={lastName} onChange={(event) => setLastName(event.target.value)} /></label>
+        <label className="wide">Correo electrónico<input required type="email" maxLength={254} autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} /></label>
+      </div>
+      {message && <p className={`form-message ${message.kind}`} role={message.kind === 'error' ? 'alert' : 'status'}>{message.text}</p>}
+      <button className="primary-button submit-invitation" type="submit" disabled={busy}>{busy ? 'Enviando…' : 'Enviar invitación'}</button>
+    </form>
+  </section>;
 }
 
 function SectionPlaceholder({ section }: { section: Exclude<Section, 'Resumen' | 'Clientes' | 'Usuarios'> }) {

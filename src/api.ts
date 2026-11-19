@@ -9,8 +9,16 @@ export function createApiClient(baseUrl: string, getToken: () => Promise<string>
     });
     if (!response.ok) {
       let code: string | undefined;
-      try { const body: unknown = await response.json(); if (body && typeof body === 'object' && 'code' in body && body.code === 'CUSTOMER_EMAIL_DUPLICATE') code = body.code; } catch { /* Keep the generic error when no structured body is available. */ }
-      throw Object.assign(new Error(`La API respondió ${response.status}`), { status: response.status, ...(code ? { code } : {}) });
+      let message = `La API respondió ${response.status}`;
+      try {
+        const body: unknown = await response.json();
+        if (body && typeof body === 'object') {
+          if ('code' in body && body.code === 'CUSTOMER_EMAIL_DUPLICATE') code = body.code;
+          if ('message' in body && Array.isArray(body.message)) message = body.message.join('. ');
+          else if ('message' in body && typeof body.message === 'string') message = body.message;
+        }
+      } catch { /* Keep the status message when the API has no JSON body. */ }
+      throw Object.assign(new Error(message), { status: response.status, ...(code ? { code } : {}) });
     }
     return response.json() as Promise<T>;
   };
