@@ -101,7 +101,7 @@ function Dashboard({ config }: { config: AppConfig }) {
         <div className="brand"><span className="brand-mark">O</span><div><strong>Ohana</strong><small>Envíos</small></div></div>
         <p className="nav-label">OPERACIONES</p>
         <nav aria-label="Secciones principales">
-          {sections.filter((item) => item !== 'Usuarios' || admin || canInvite).map((item) => (
+          {sections.filter((item) => item !== 'Usuarios' || admin).map((item) => (
             <button key={item} type="button" className={`nav-item ${section === item ? 'active' : ''}`} onClick={() => setSection(item)}>{item}</button>
           ))}
         </nav>
@@ -113,7 +113,7 @@ function Dashboard({ config }: { config: AppConfig }) {
       <main className="content">
         <header className="topbar"><div><span className="eyebrow">PANEL DE GESTIÓN</span><h1>{section}</h1></div><div className="account"><span>{user?.profile.name ?? user?.profile.email ?? 'Usuario'}</span><button type="button" onClick={() => void signoutRedirect()}>Salir</button></div></header>
         {section === 'Resumen' ? <>{!operationalSession && sessionCheck === 'verified' && sources && <><InvitationClaim source={sources.registrations} /><RegistrationForm source={sources.registrations} /></>}<Overview /></> : section === 'Clientes' ? <>{admin && sources && <AdminCustomerRegistration source={sources.registrations} onCreated={() => setCustomersRevision(value => value + 1)} />}<CustomersPage key={customersRevision} source={admin ? sources?.customers : undefined} /></> : section === 'Usuarios' ?
-          <>{canInvite && accessToken && <UserInvitations config={config} accessToken={accessToken} />} {admin && sources && <><PendingRegistrations source={sources.registrations} /><UsersPage source={sources.users} /></>}</>
+          <>{admin && canInvite && accessToken && <UserInvitations config={config} accessToken={accessToken} />} {admin && sources && <><PendingRegistrations source={sources.registrations} /><UsersPage source={sources.users} /></>}</>
           : <SectionPlaceholder section={section} />}
       </main>
     </div>
