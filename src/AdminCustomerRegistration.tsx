@@ -2,13 +2,13 @@
 import type { AdminRegistrationDraft, RegistrationsSource } from './registrations';
 
 const empty: AdminRegistrationDraft = { displayName: '', type: 'PERSON', phone: '', email: '' };
-export function AdminCustomerRegistration({ source, onCreated }: { source: RegistrationsSource; onCreated: () => void }) {
+export function AdminCustomerRegistration({ source, onCreated }: { source: RegistrationsSource; onCreated: (id: string) => void }) {
   const [open, setOpen] = useState(false); const [draft, setDraft] = useState(empty);
   const [review, setReview] = useState(false); const [busy, setBusy] = useState(false); const [message, setMessage] = useState('');
   const pending = useRef<AbortController | null>(null); useEffect(() => () => pending.current?.abort(), []);
   async function save() {
     if (busy) return; const controller = new AbortController(); pending.current = controller; setBusy(true); setMessage('');
-    try { await source.registerByAdmin(draft, controller.signal); if (!controller.signal.aborted) { setDraft(empty); setReview(false); setOpen(false); setMessage('Cliente registrado y habilitado.'); onCreated(); } }
+    try { const result = await source.registerByAdmin(draft, controller.signal); if (!controller.signal.aborted) { setDraft(empty); setReview(false); setOpen(false); setMessage('Cliente registrado y habilitado.'); onCreated(result.id); } }
     catch (error) { if (!controller.signal.aborted) setMessage(typeof error === 'object' && error !== null && 'status' in error && error.status === 409 ? 'Ya existe un cliente o solicitud con ese correo.' : 'No se pudo registrar. Revisá los datos e intentá nuevamente.'); }
     finally { if (!controller.signal.aborted) setBusy(false); }
   }
