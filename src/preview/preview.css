@@ -1,0 +1,25 @@
+/* Light-theme tokens from the saved HTML prototype; scoped to our development views. */
+body:has(.ohana-preview){background:#F2F6F3}
+.ohana-preview{
+  --preview-brand:#0D7052;--preview-ink:#16221C;--preview-muted:#5A6B61;
+  --preview-card:#FFFFFF;--preview-line:#E4EBE6;--preview-soft:#EAF1EC;
+  font-family:'Plus Jakarta Sans',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  color:var(--preview-ink);max-width:900px;padding:1.25rem 1.25rem calc(7rem + env(safe-area-inset-bottom,0px));
+  --customer-radius:16px;line-height:1.45;
+}
+.ohana-preview .eyebrow{color:var(--preview-muted)}
+.ohana-preview .brand-mark{background:var(--preview-brand);box-shadow:none;border-radius:14px}
+.ohana-preview .panel{background:var(--preview-card);border-color:var(--preview-line);border-radius:22px;box-shadow:0 2px 12px #16221C0D}
+.ohana-preview button,.ohana-preview input,.ohana-preview select,.ohana-preview textarea{font-family:inherit;font-size:1rem;min-height:52px;border-radius:12px}
+.ohana-preview .customer-avatar{background:#E3F2EA;border-radius:14px}
+.ohana-preview .customer-preview-header h1,.ohana-preview .users-preview-header h1{font-size:1.6875rem;font-weight:800;letter-spacing:-.035em}
+.ohana-preview .customer-preview-banner,.ohana-preview .users-preview-banner{border-radius:16px}
+.preview-navigation{
+  position:fixed;bottom:calc(1rem + env(safe-area-inset-bottom,0px));left:50%;transform:translateX(-50%);
+  z-index:10;display:flex;gap:.5rem;width:calc(100% - 2rem);max-width:32rem;
+  padding:.5rem;background:#16221C;border-radius:22px;box-shadow:0 8px 32px #16221C29;
+}
+.preview-navigation a{display:flex;align-items:center;justify-content:center;flex:1;min-width:0;min-height:52px;padding:.5rem;text-align:center;border-radius:16px;color:#DCE7DF;font-size:.875rem;font-weight:700;text-decoration:none}
+.preview-navigation a[aria-current="page"]{background:white;color:#0A5B42}
+.preview-navigation a:focus-visible{outline:3px solid #D8F0E2;outline-offset:2px}
+@media(min-width:48rem){.ohana-preview{padding:2rem 2rem calc(7rem + env(safe-area-inset-bottom,0px))}}
