@@ -1,0 +1,9 @@
+import { useEffect, useState } from 'react';
+type Event = { type: string; occurredAt: string; actorLabel?: string; notes?: string | null };
+type Request = <T>(path: string, init?: RequestInit) => Promise<T>;
+const labels: Record<string, string> = { CREATED: 'Envío registrado', RECEIPT_ADDED: 'Comprobante adjuntado', RECEIPT_REPLACED: 'Comprobante reemplazado', ASSIGNMENT_CHANGED: 'Responsable actualizado' };
+export function ShipmentHistory({ id, request, revision }: { id: string; request: Request; revision: number }) {
+  const [page, setPage] = useState(1); const [pages, setPages] = useState(0); const [items, setItems] = useState<Event[]>([]); const [error, setError] = useState(''); const [loading, setLoading] = useState(true);
+  useEffect(() => { const controller = new AbortController(); setLoading(true); setError(''); request<{ items: Event[]; totalPages: number }>(`/api/shipments/${encodeURIComponent(id)}/history?page=${page}`, { signal: controller.signal }).then((value) => { setItems(value.items); setPages(value.totalPages); }).catch(() => { if (!controller.signal.aborted) setError('No se pudo cargar el historial.'); }).finally(() => { if (!controller.signal.aborted) setLoading(false); }); return () => controller.abort(); }, [id, request, page, revision]);
+  return <section><h3>Historial</h3>{error && <p role="alert">{error}</p>}{loading ? <p>Cargando…</p> : !error && (items.length ? <ul>{items.map((event, index) => <li key={`${event.occurredAt}-${index}`}>{labels[event.type] ?? 'Evento registrado'} · {new Date(event.occurredAt).toLocaleString('es-UY')}{event.actorLabel ? ` · ${event.actorLabel}` : ''}{event.notes ? ` · ${event.notes}` : ''}</li>)}</ul> : <p>Sin eventos.</p>)}<button type="button" disabled={page <= 1} onClick={() => setPage(page - 1)}>Anterior</button> Página {page} de {Math.max(1, pages)} <button type="button" disabled={page >= pages} onClick={() => setPage(page + 1)}>Siguiente</button></section>;
+}
