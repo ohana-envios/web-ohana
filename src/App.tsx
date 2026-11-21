@@ -19,6 +19,7 @@ type Section = 'Resumen' | 'Envíos' | 'Clientes' | 'Rutas' | 'Usuarios' | 'Repa
 type Health = 'checking' | 'up' | 'down';
 type SessionCheck = 'checking' | 'verified' | 'failed';
 
+const sectionIcons: Record<Section, string> = { Resumen: '◈', Envíos: '▤', Clientes: '◉', Repartidores: '◎', Rutas: '↗', Usuarios: '☰' };
 const sections: Section[] = ['Resumen', 'Envíos', 'Clientes', 'Repartidores', 'Rutas', 'Usuarios'];
 
 function Dashboard({ config }: { config: AppConfig }) {
@@ -110,10 +111,10 @@ function Dashboard({ config }: { config: AppConfig }) {
     <div className="app-shell">
       <aside className="sidebar">
         <div className="brand"><span className="brand-mark">O</span><div><strong>Ohana</strong><small>Envíos</small></div></div>
-        <p className="nav-label">OPERACIONES</p>
+
         <nav aria-label="Secciones principales">
           {sections.filter((item) => (item !== 'Usuarios' && item !== 'Repartidores') || admin).map((item) => (
-            <button key={item} type="button" className={`nav-item ${section === item ? 'active' : ''}`} onClick={() => setSection(item)}>{item}</button>
+            <button key={item} type="button" aria-label={item} title={item} aria-current={section === item ? 'page' : undefined} className={`nav-item ${section === item ? 'active' : ''}`} onClick={() => setSection(item)}><span aria-hidden="true">{sectionIcons[item]}</span><span className="nav-name">{item}</span></button>
           ))}
         </nav>
         <div className="sidebar-footer">
@@ -207,6 +208,6 @@ export default function App({ config }: { config: AppConfig }) {
   const { isLoading, isAuthenticated, error, signinRedirect } = useAuth();
   if (isLoading) return <main className="setup"><p>Cargando sesión…</p></main>;
   if (error) return <main className="setup"><div className="setup-card"><h1>No se pudo iniciar sesión</h1><p>{error.message}</p><button className="primary-button" onClick={() => void signinRedirect()}>Reintentar</button></div></main>;
-  if (!isAuthenticated) return <main className="login-layout"><div className="login-hero"><span className="brand-mark">O</span><p className="eyebrow">OHANA ENVÍOS</p><h1>Tu operación,<br />siempre en movimiento.</h1><p>Gestión de cadetería y envíos en un solo lugar.</p></div><div className="login-side"><div className="login-card"><span className="eyebrow">BIENVENIDO</span><h2>Ingresá a Ohana</h2><p>Accedé de forma segura con tu cuenta de la organización.</p><button className="primary-button" onClick={() => void signinRedirect()}>Iniciar sesión <span>→</span></button><p>Si olvidaste tu contraseña, ingresá tu correo en la pantalla de acceso y elegí la opción para recuperarla.</p><button type="button" onClick={() => void signinRedirect()}>Recuperar contraseña</button><small>Si se te pide configurar el segundo factor, seguí los pasos de ZITADEL y confirmá el método antes de volver a Ohana.</small></div></div></main>;
+  if (!isAuthenticated) return <main className="login-layout"><div className="login-hero"><span className="brand-mark">O</span><strong>Ohana Envíos</strong></div><div className="login-side"><div className="login-card"><span className="eyebrow">BIENVENIDO</span><h2>Ingresá a Ohana</h2><p>Accedé de forma segura con tu cuenta de la organización.</p><button className="primary-button" onClick={() => void signinRedirect()}>Iniciar sesión <span>→</span></button><p>Si olvidaste tu contraseña, ingresá tu correo en la pantalla de acceso y elegí la opción para recuperarla.</p><button type="button" onClick={() => void signinRedirect()}>Recuperar contraseña</button><small>Si se te pide configurar el segundo factor, seguí los pasos de ZITADEL y confirmá el método antes de volver a Ohana.</small></div></div></main>;
   return <Dashboard config={config} />;
 }
