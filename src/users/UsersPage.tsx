@@ -43,7 +43,7 @@ export function UsersPage({ source, pageSize = 20, preview = false }: { source: 
     <div className="users-heading"><span className="eyebrow">DIRECTORIO DE ACCESO</span>
       <h2 id="users-heading" tabIndex={-1} ref={heading}>Usuarios y roles</h2><p>Consultá las cuentas de usuario y su estado de acceso.</p>
     </div>
-    <InternalUserForm source={source} onCreated={() => setRetry(value => value + 1)} />
+    <InternalUserForm source={source} onCreated={email => setQuery(previous => ({ ...previous, search: email, role: 'all', status: 'all', page: 1 }))} />
     {change && <aside className="panel user-access-evidence" role="status">
       <strong>Acceso actualizado{preview ? ' en la vista previa' : ''}: {change.user.displayName}</strong>
       {(change.audit || change.previewAudit) && <>
