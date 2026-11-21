@@ -1,9 +1,9 @@
 .customers,.customer-detail,.customer-preview{
-  --customer-ink:#16221C;
-  --customer-muted:#5A6B61;
-  --customer-border:#E4EBE6;
-  --customer-soft:#EAF1EC;
-  --customer-brand:#0D7052;
+  --customer-ink:#243b4b;
+  --customer-muted:#526778;
+  --customer-border:#dce5eb;
+  --customer-soft:#e9f2fa;
+  --customer-brand:#004e89;
   --customer-radius:.75rem;
   color:var(--customer-ink);
   min-width:0;
@@ -16,7 +16,7 @@
 .customer-field label{font-size:.875rem;font-weight:650}
 .customer-field input,.customer-field select,.customer-field textarea{width:100%;min-width:0;min-height:2.75rem;border:1px solid #7C9184;border-radius:.5rem;padding:.75rem;font:inherit;color:var(--customer-ink);background:white}
 .customer-field textarea{resize:vertical;line-height:1.5}
-.customer-field input::placeholder{color:#5A6B61}
+.customer-field input::placeholder{color:#526778}
 .customer-result-count{margin:1.25rem 0 .75rem;color:var(--customer-muted);font-size:.875rem}
 .customer-list,.customer-address-list{list-style:none;margin:0;padding:0}
 .customer-list{display:grid;gap:.75rem}
@@ -81,7 +81,7 @@
 .customer-preview-header h1{font-size:1.5rem;margin:.375rem 0}
 .customer-preview-banner{padding:1rem 1.25rem;border:1px solid #d4b66a;border-radius:var(--customer-radius);background:#fff7e5;color:#654911;margin-bottom:1.5rem;line-height:1.6}
 .customer-preview-banner p{margin:.25rem 0 0}
-.customers :focus-visible,.customer-detail :focus-visible,.customer-preview :focus-visible{outline:3px solid #0D7052;outline-offset:4px}
+.customers :focus-visible,.customer-detail :focus-visible,.customer-preview :focus-visible{outline:3px solid #004e89;outline-offset:4px}
 .customers h2:focus,.customer-detail h2:focus{outline:2px solid var(--customer-brand);outline-offset:4px;border-radius:.25rem}
 @media(min-width:48rem){
   .customer-filters{grid-template-columns:minmax(0,1fr) 12rem}
