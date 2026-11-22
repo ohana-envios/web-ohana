@@ -1,6 +1,6 @@
 # Ohana Envíos — web
 
-Base React 19 + Vite 7 + TypeScript para la plataforma web. Toma como referencia el prototipo de Ohana (`CadeteriaFull_Stack/CadeteriaFE`) en la organización visual del panel, sus secciones y colores. El prototipo usa una API de demostración y guarda un token en `localStorage`; esta base usa el cliente OIDC de ZITADEL y no reutiliza ese flujo.
+Aplicación web de Ohana con React, Vite y TypeScript. La interfaz de acceso toma como referencia el [prototipo de Ohana Envíos](https://github.com/sanei1509/ohana-envios-prototipo). La autenticación usa OIDC con ZITADEL.
 
 ## Inicio local
 

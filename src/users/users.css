@@ -4,13 +4,13 @@
 .users-preview-header h1{margin:.375rem 0;font-size:1.5rem}
 .users-preview-banner{padding:1rem 1.25rem;border:1px solid #d4b66a;border-radius:.75rem;background:#fff7e5;color:#654911;line-height:1.6;margin-bottom:1.5rem}
 .users-preview-banner p{margin:.25rem 0 0}
-.users-preview-link{display:inline-flex;min-height:2.75rem;align-items:center;color:var(--users-brand);text-underline-offset:.25rem}
+.users-preview-link{display:inline-flex;min-height:52px;align-items:center;color:var(--users-brand);text-underline-offset:.25rem}
 .users-heading h2{margin:.5rem 0;font-size:1.5rem;letter-spacing:-.03em}
 .users-heading p{margin:.5rem 0 1.5rem;color:var(--users-muted);line-height:1.6}
 .users-filters{display:grid;gap:1rem;padding:1.25rem}
 .users-field{display:grid;gap:.5rem;min-width:0}
 .users-field label{font-size:.875rem;font-weight:650}
-.users-field input,.users-field select{width:100%;min-width:0;min-height:2.75rem;border:1px solid #7C9184;border-radius:.5rem;padding:.75rem;font:inherit;color:var(--users-ink);background:white}
+.users-field input,.users-field select{width:100%;min-width:0;min-height:52px;border:1px solid #7C9184;border-radius:16px;padding:.75rem;font:inherit;color:var(--users-ink);background:white}
 .users-field input::placeholder{color:#5A6B61}
 .users-result-count{margin:1.25rem 0 .75rem;color:var(--users-muted);font-size:.875rem}
 .users-list{list-style:none;display:grid;gap:.75rem;margin:0;padding:0}
@@ -23,7 +23,7 @@
 .user-status{display:inline-flex;align-items:center;gap:.375rem;width:fit-content;padding:.375rem .625rem;border-radius:.375rem;font-size:.75rem;font-weight:750;line-height:1.5}
 .user-status.is-enabled{color:#246044;background:#eaf5ef}
 .user-status.is-disabled{color:#5d6470;background:#f0f1f4}
-.users-button{display:inline-flex;align-items:center;justify-content:center;min-height:2.75rem;border:1px solid #7C9184;border-radius:.5rem;padding:.625rem 1rem;background:white;color:var(--users-brand);font-size:.875rem;font-weight:650}
+.users-button{display:inline-flex;align-items:center;justify-content:center;min-height:52px;border:1px solid #7C9184;border-radius:16px;padding:.625rem 1rem;background:white;color:var(--users-brand);font-size:.875rem;font-weight:650}
 .users-button:hover:not(:disabled){background:#E3F2EA;border-color:var(--users-brand)}
 .users-button:disabled{cursor:default;opacity:.5}
 .user-row .user-access-action{grid-column:1/-1;justify-self:start}
