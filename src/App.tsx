@@ -14,6 +14,9 @@ import { isCurrentAdministrator, type OperationalSession } from './operational-s
 import { CouriersPage } from './couriers/CouriersPage';
 import { ShipmentForm } from './shipments/ShipmentForm';
 import { ShipmentList } from './shipments/ShipmentList';
+import { MyCustody } from './shipments/MyCustody';
+import { MyTasks } from './shipments/MyTasks';
+import { DayPlanning } from './shipments/DayPlanning';
 
 type Section = 'Resumen' | 'Envíos' | 'Clientes' | 'Rutas' | 'Usuarios' | 'Repartidores';
 type Health = 'checking' | 'up' | 'down';
@@ -29,6 +32,7 @@ function Dashboard({ config }: { config: AppConfig }) {
   const [hasInvite, setHasInvite] = useState(false);
   const [customersRevision, setCustomersRevision] = useState(0);
   const [shipmentsRevision, setShipmentsRevision] = useState(0);
+  const [custodyRevision, setCustodyRevision] = useState(0);
   const [health, setHealth] = useState<Health>('checking');
   const [sessionCheck, setSessionCheck] = useState<SessionCheck>('checking');
   const [operationalSession, setOperationalSession] = useState<OperationalSession | null>(null);
@@ -105,7 +109,7 @@ function Dashboard({ config }: { config: AppConfig }) {
 
   if (operationalSession?.user.role === 'CUSTOMER' && operationalSession.token === accessToken && sources && courierRequest) return <SelfCustomerPage source={sources.selfCustomer} request={courierRequest} downloadReceipt={downloadReceipt} name={operationalSession.user.displayName} onExit={() => void signoutRedirect()} />;
 
-  if (operationalSession && (operationalSession.user.role === 'OPERATOR' || operationalSession.user.role === 'COURIER') && operationalSession.token === accessToken && courierRequest) return <main className="content"><header className="topbar"><h1>Hola, {operationalSession.user.displayName}</h1><button type="button" onClick={() => void signoutRedirect()}>Salir</button></header><ShipmentList request={courierRequest} downloadReceipt={downloadReceipt} own={operationalSession.user.role === 'COURIER'} readOnly /></main>;
+  if (operationalSession && (operationalSession.user.role === 'OPERATOR' || operationalSession.user.role === 'COURIER') && operationalSession.token === accessToken && courierRequest) return <main className="content"><header className="topbar"><h1>Hola, {operationalSession.user.displayName}</h1><button type="button" onClick={() => void signoutRedirect()}>Salir</button></header>{operationalSession.user.role === 'COURIER' && <><MyTasks request={courierRequest} externalRevision={custodyRevision} onCustodyUpdated={() => setCustodyRevision((v) => v + 1)} /><MyCustody key={custodyRevision} request={courierRequest} /></>}<ShipmentList request={courierRequest} downloadReceipt={downloadReceipt} own={operationalSession.user.role === 'COURIER'} canChangeStatus={operationalSession.user.role === 'COURIER'} onCustodyUpdated={() => setCustodyRevision((v) => v + 1)} readOnly /></main>;
 
   return (
     <div className="app-shell">
@@ -146,7 +150,7 @@ function Dashboard({ config }: { config: AppConfig }) {
             {accessView === 'pending' ? <PendingRegistrations source={sources.registrations} /> :
               accessView === 'email' && canInvite && accessToken ? <UserInvitations config={config} accessToken={accessToken} /> : <UsersPage source={sources.users} />}
           </>)
-          : section === 'Repartidores' ? (admin && courierRequest && <CouriersPage request={courierRequest} />) : section === 'Envíos' ? (admin && courierRequest && sources && <><ShipmentList key={shipmentsRevision} request={courierRequest} downloadReceipt={downloadReceipt} /><ShipmentForm source={sources.customers} request={courierRequest} registrations={sources.registrations} onCreated={() => setShipmentsRevision((v) => v + 1)} /></>) : <SectionPlaceholder section={section} />}
+          : section === 'Repartidores' ? (admin && courierRequest && <CouriersPage request={courierRequest} />) : section === 'Envíos' ? (admin && courierRequest && sources && <><DayPlanning key={shipmentsRevision} request={courierRequest} /><ShipmentList key={shipmentsRevision} request={courierRequest} downloadReceipt={downloadReceipt} canChangeStatus /><ShipmentForm source={sources.customers} request={courierRequest} registrations={sources.registrations} onCreated={() => setShipmentsRevision((v) => v + 1)} /></>) : <SectionPlaceholder section={section} />}
       </main>
     </div>
   );

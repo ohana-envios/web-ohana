@@ -1,3 +1,4 @@
+import { ShipmentLabel } from './ShipmentLabel';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import type { CustomerDetail, CustomersSource, CustomerSummary } from '../customers/types';
 import { AdminCustomerRegistration } from '../AdminCustomerRegistration';
@@ -19,7 +20,7 @@ export function ShipmentForm({ source, request, own = false, onCreated, registra
   const attempt = useRef<{ key: string; payload: string; receipt: File | null } | null>(null);
   const form = useRef<HTMLFormElement>(null);
   const [uncertain, setUncertain] = useState(false);
-  const [review, setReview] = useState(false); const [busy, setBusy] = useState(false); const [error, setError] = useState(''); const [code, setCode] = useState('');
+  const [review, setReview] = useState(false); const [busy, setBusy] = useState(false); const [error, setError] = useState(''); const [code, setCode] = useState(''); const [createdId, setCreatedId] = useState('');
   useEffect(() => {
     const controller = new AbortController();
     if (own) source.get('', controller.signal).then(setCustomer).catch(() => { if (!controller.signal.aborted) setError('No se pudo cargar tu ficha de cliente.'); });
@@ -40,14 +41,14 @@ export function ShipmentForm({ source, request, own = false, onCreated, registra
       attempt.current = current;
       const multipart = new FormData(); if (current.receipt) { multipart.append('payload', current.payload); multipart.append('receipt', current.receipt); }
       const headers: Record<string, string> = { 'Idempotency-Key': current.key }; if (!current.receipt) headers['Content-Type'] = 'application/json';
-      const result = await request<{ code: string }>('/api/shipments', { method: 'POST', headers, body: current.receipt ? multipart : current.payload });
-      attempt.current = null; setUncertain(false); setCode(result.code); setReview(false); onCreated?.();
+      const result = await request<{ id: string; code: string }>('/api/shipments', { method: 'POST', headers, body: current.receipt ? multipart : current.payload });
+      attempt.current = null; setUncertain(false); setCode(result.code); setCreatedId(result.id); setReview(false); onCreated?.();
     } catch (reason) { const status = (reason as { status?: number })?.status; if (!uncertain && status && status >= 400 && status < 500 && status !== 408 && status !== 429) { attempt.current = null; setUncertain(false); setReview(false); setError(reason instanceof Error ? reason.message : 'Revisá los datos del envío.'); } else { setUncertain(true); setError('No pudimos confirmar si se registró el envío. Reintentá para comprobarlo sin crear otro.'); } }
     finally { setBusy(false); }
   }
   const addressFields = (label: string, value: Address, update: (next: Address) => void) => <fieldset><legend>{label}</legend>{([['street', 'Calle', 160], ['number', 'Número', 30], ['locality', 'Localidad', 80], ['department', 'Departamento', 80], ['reference', 'Referencia', 240]] as const).map(([key, title, max]) => <label key={key}>{title}<input required={key !== 'reference'} maxLength={max} value={value[key]} onChange={(event) => update({ ...value, [key]: event.target.value })} /></label>)}</fieldset>;
-  if (uncertain && attempt.current) return <section className="panel"><h2>Registro sin confirmar</h2><p role="alert">{error}</p><p>Código para consultar: <strong>OH-{attempt.current.key.toUpperCase()}</strong>. Anotalo antes de salir de esta pantalla.</p><button type="button" disabled={busy} onClick={() => void submit()}>{busy ? 'Comprobando…' : 'Reintentar y comprobar'}</button></section>;
-  if (code) return <section className="panel"><h2>Envío registrado</h2><p>El código del envío es <strong>{code}</strong>.</p><button type="button" onClick={() => { setCode(''); setName(''); setPhone(''); setPackageDescription(''); setWhen(''); setDeliveryWhen(''); setReceipt(null); setNotes(''); setPickup(emptyAddress()); setDelivery(emptyAddress()); setPickupId('new'); setSaveAddress(false); }}>Registrar otro envío</button></section>;
+  if (uncertain && attempt.current) return <section className="panel"><h2>Registro sin confirmar</h2><p role="alert">{error}</p><p>Código de recuperación para consultar: <strong>OH-{attempt.current.key.toUpperCase()}</strong>. Anotalo antes de salir de esta pantalla.</p><button type="button" disabled={busy} onClick={() => void submit()}>{busy ? 'Comprobando…' : 'Reintentar y comprobar'}</button></section>;
+  if (code) return <section className="panel"><h2>Envío registrado</h2><p>El código del envío es <strong>{code}</strong>.</p>{createdId && <ShipmentLabel id={createdId} request={request} />}<button type="button" onClick={() => { setCode(''); setCreatedId(''); setName(''); setPhone(''); setPackageDescription(''); setWhen(''); setDeliveryWhen(''); setReceipt(null); setNotes(''); setPickup(emptyAddress()); setDelivery(emptyAddress()); setPickupId('new'); setSaveAddress(false); }}>Registrar otro envío</button></section>;
   return <section className="panel"><h2>Nuevo envío</h2>{error && <p role="alert">{error}</p>}
     {!own && <div><label>Buscar cliente<input value={search} maxLength={120} onChange={(event) => { setPage(1); setSearch(event.target.value); }} /></label><ul>{customers.map((item) => <li key={item.id}>{item.displayName} <button type="button" onClick={() => void choose(item.id)}>Seleccionar</button></li>)}</ul><button type="button" disabled={page <= 1} onClick={() => setPage(page - 1)}>Anterior</button> Página {page} de {Math.max(pages, 1)} <button type="button" disabled={page >= pages} onClick={() => setPage(page + 1)}>Siguiente</button>{registrations && <><button type="button" onClick={() => setRegisterCustomer(!registerCustomer)}>{registerCustomer ? 'Cerrar alta de cliente' : 'Registrar nuevo cliente'}</button>{registerCustomer && <AdminCustomerRegistration source={registrations} onCreated={(id) => { setRegisterCustomer(false); setSearch(''); setPage(1); void choose(id, true); }} />}</>}</div>}
     {customer && <form ref={form} onSubmit={(event: FormEvent) => { event.preventDefault(); if (!/^[+\d() .-]+$/.test(phone) || !/\d/.test(phone)) { setError('Revisá el teléfono del destinatario.'); return; } if (when && deliveryWhen && new Date(deliveryWhen) < new Date(when)) { setError('La entrega no puede ser anterior al retiro.'); return; } setError(''); setReview(true); }}><p>Cliente: <strong>{customer.displayName}</strong></p>
