@@ -106,3 +106,9 @@ h2 { font-size: 1.35rem; }
   .nav-item { padding-inline: 11px; }
   .nav-item:not(.active) .nav-name { display: none; }
 }
+.proposal-alerts { position: relative; }
+.proposal-alerts-list { position: absolute; z-index: 10; right: 0; top: calc(100% + 8px); width: min(360px, 85vw); max-height: 65vh; overflow: auto; padding: 18px; background: #fff; color: #163448; border: 1px solid #cfdae2; border-radius: 16px; box-shadow: 0 8px 24px #17354a30; }
+.proposal-alerts-list h2 { font-size: 1.1rem; margin: 0 0 12px; }
+.proposal-alerts-list ul { list-style: none; margin: 0; padding: 0; }
+.proposal-alerts-list li { border-bottom: 1px solid #e2e8ed; padding: 8px 0 12px; }
+.proposal-alerts-list li p { margin: 4px 0; }

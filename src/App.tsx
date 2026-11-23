@@ -1,3 +1,4 @@
+import { ProposalAlerts } from './shipments/ProposalAlerts';
 import { useAuth } from 'react-oidc-context';
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import type { AppConfig } from './config';
@@ -31,7 +32,7 @@ function Dashboard({ config }: { config: AppConfig }) {
   const [accessView, setAccessView] = useState<'directory' | 'pending' | 'email'>('directory');
   const [hasInvite, setHasInvite] = useState(false);
   const [customersRevision, setCustomersRevision] = useState(0);
-  const [shipmentsRevision, setShipmentsRevision] = useState(0);
+  const [shipmentsRevision, setShipmentsRevision] = useState(0); const [selectedShipmentId, setSelectedShipmentId] = useState<string | undefined>();
   const [custodyRevision, setCustodyRevision] = useState(0);
   const [health, setHealth] = useState<Health>('checking');
   const [sessionCheck, setSessionCheck] = useState<SessionCheck>('checking');
@@ -127,7 +128,7 @@ function Dashboard({ config }: { config: AppConfig }) {
         </div>
       </aside>
       <main className="content">
-        <header className="topbar"><div><span className="eyebrow">PANEL DE GESTIÓN</span><h1>{section}</h1></div><div className="account"><span>{user?.profile.name ?? user?.profile.email ?? 'Usuario'}</span><button type="button" onClick={() => void signoutRedirect()}>Salir</button></div></header>
+        <header className="topbar"><div><span className="eyebrow">PANEL DE GESTIÓN</span><h1>{section}</h1></div><div className="account">{admin && courierRequest && <ProposalAlerts request={courierRequest} onOpen={(id) => { setSelectedShipmentId(id); setShipmentsRevision((v) => v + 1); setSection('Envíos'); window.scrollTo({ top: 0, behavior: 'smooth' }); }} />}<span>{user?.profile.name ?? user?.profile.email ?? 'Usuario'}</span><button type="button" onClick={() => void signoutRedirect()}>Salir</button></div></header>
         {section === 'Resumen' ? (!operationalSession && sessionCheck === 'verified' && sources ? <>
           <div className="access-choices" role="group" aria-label="Acceso a Ohana">
             <button aria-pressed={!hasInvite} onClick={() => setHasInvite(false)}>Solicitar alta</button>
@@ -150,7 +151,7 @@ function Dashboard({ config }: { config: AppConfig }) {
             {accessView === 'pending' ? <PendingRegistrations source={sources.registrations} /> :
               accessView === 'email' && canInvite && accessToken ? <UserInvitations config={config} accessToken={accessToken} /> : <UsersPage source={sources.users} />}
           </>)
-          : section === 'Repartidores' ? (admin && courierRequest && <CouriersPage request={courierRequest} />) : section === 'Envíos' ? (admin && courierRequest && sources && <><DayPlanning key={shipmentsRevision} request={courierRequest} /><ShipmentList key={shipmentsRevision} request={courierRequest} downloadReceipt={downloadReceipt} canChangeStatus /><ShipmentForm source={sources.customers} request={courierRequest} registrations={sources.registrations} onCreated={() => setShipmentsRevision((v) => v + 1)} /></>) : <SectionPlaceholder section={section} />}
+          : section === 'Repartidores' ? (admin && courierRequest && <CouriersPage request={courierRequest} />) : section === 'Envíos' ? (admin && courierRequest && sources && <><ShipmentList key={shipmentsRevision} request={courierRequest} downloadReceipt={downloadReceipt} canChangeStatus initialShipmentId={selectedShipmentId} /><DayPlanning key={shipmentsRevision} request={courierRequest} /><ShipmentForm source={sources.customers} request={courierRequest} registrations={sources.registrations} onCreated={() => setShipmentsRevision((v) => v + 1)} /></>) : <SectionPlaceholder section={section} />}
       </main>
     </div>
   );

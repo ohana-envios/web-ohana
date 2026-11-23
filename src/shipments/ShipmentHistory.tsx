@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { shipmentStatuses } from './statuses';
 type Event = { type: string; occurredAt: string; actorLabel?: string; notes?: string | null; newStatus?: string | null };
 type Request = <T>(path: string, init?: RequestInit) => Promise<T>;
-const labels: Record<string, string> = { CREATED: 'Envío registrado', STATUS_CHANGED: 'Estado actualizado', RECEIPT_ADDED: 'Comprobante adjuntado', RECEIPT_REPLACED: 'Comprobante reemplazado', ASSIGNMENT_CHANGED: 'Responsable actualizado', CUSTODY_CHANGED: 'Custodia actualizada', PLAN_CHANGED: 'Jornada planificada' };
+const labels: Record<string, string> = { CREATED: 'Envío registrado', STATUS_CHANGED: 'Estado actualizado', RECEIPT_ADDED: 'Comprobante adjuntado', RECEIPT_REPLACED: 'Comprobante reemplazado', ASSIGNMENT_CHANGED: 'Responsable actualizado', CUSTODY_CHANGED: 'Custodia actualizada', PLAN_CHANGED: 'Jornada planificada', INCIDENT_RECORDED: 'Incidencia registrada', INCIDENT_RESOLVED: 'Incidencia resuelta', RESCHEDULED: 'Envío reprogramado', INCIDENT_EVIDENCE_ADDED: 'Evidencia de incidencia registrada', EVENT_EVIDENCE_ADDED: 'Evidencia de custodia registrada', RESCHEDULE_PROPOSED: 'Propuesta de reprogramación', RESCHEDULE_PROPOSAL_REJECTED: 'Propuesta rechazada' };
 export function ShipmentHistory({ id, request, revision, basic = false }: { id: string; request: Request; revision: number; basic?: boolean }) {
   const [page, setPage] = useState(1); const [pages, setPages] = useState(0); const [items, setItems] = useState<Event[]>([]); const [error, setError] = useState(''); const [loading, setLoading] = useState(true);
   const [type, setType] = useState(''); const [attempt, setAttempt] = useState(0);
