@@ -1,0 +1,7 @@
+import { useState } from 'react';
+type Request = <T>(path: string, init?: RequestInit) => Promise<T>;
+export function DeliveryEvidence({ id, request }: { id: string; request: Request }) {
+  const [message, setMessage] = useState(''); const [busy, setBusy] = useState(false);
+  async function download() { setBusy(true); setMessage(''); try { const file = await request<{ mediaType: string; data: string }>(`/api/shipments/${encodeURIComponent(id)}/delivery/evidence`); const extension = ({ 'application/pdf': 'pdf', 'image/png': 'png', 'image/jpeg': 'jpg' } as Record<string, string>)[file.mediaType]; if (!extension) throw new Error('invalid'); const bytes = Uint8Array.from(atob(file.data), (char) => char.charCodeAt(0)); const url = URL.createObjectURL(new Blob([bytes], { type: file.mediaType })); const link = document.createElement('a'); link.href = url; link.download = `evidencia-entrega.${extension}`; document.body.appendChild(link); link.click(); link.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000); } catch (reason) { setMessage(typeof reason === 'object' && reason !== null && 'status' in reason && reason.status === 404 ? 'No hay evidencia de entrega disponible.' : 'No se pudo recuperar la evidencia.'); } finally { setBusy(false); } }
+  return <div><button type="button" disabled={busy} onClick={() => void download()}>Descargar evidencia de entrega</button>{message && <p role="alert">{message}</p>}</div>;
+}

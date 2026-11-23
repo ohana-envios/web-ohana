@@ -1,0 +1,1 @@
+export const shipmentStatuses: Record<string, string> = { PENDING: 'Pendiente', ASSIGNED: 'Asignado', PICKED_UP: 'Retirado', IN_DEPOT: 'En depósito', IN_ROUTE: 'En ruta', DELIVERED: 'Entregado', NOT_DELIVERED: 'No entregado', RESCHEDULED: 'Reprogramado', CANCELED: 'Cancelado' };
